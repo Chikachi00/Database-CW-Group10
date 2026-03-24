@@ -1,4 +1,3 @@
-Markdown
 # Internship Assessment System (COMP1044 Coursework)
 
 ## 📌 Project Overview
