@@ -88,8 +88,8 @@ Username: Prof_jones
 Password: hashed_pwd_003
 
 👥 Team Members (Group X)
-[Your Name] - Database Architect & Full-stack Logic (ERD, SQL, Core PHP integration)
+[Lin Yiwei] - Database Architect & Full-stack Logic (ERD, SQL, Core PHP integration)
 
-[Member 2 Name] - [Role/Contribution, e.g., Frontend UI/UX & Documentation]
+[Deng Changhui] - 
 
-[Member 3 Name] - [Role/Contribution, e.g., Backend PHP & Video Demonstration]
+[Cao Shiyu] - 
