@@ -16,6 +16,7 @@ $initial = strtoupper(substr($username, 0, 1));
 $success_message = "";
 $error_message = "";
 
+// 接收并处理前端表单提交的数据
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['internship_id'])) {
     $internship_id = $_POST['internship_id'];
     $task = floatval($_POST['task_score']);
@@ -48,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['internship_id'])) {
             'time_m' => $time, 'total' => $total_score, 'comm' => $comments
         ]);
         
+        // 提交成功后，重定向自身以防止刷新重复提交，并传递成功参数
         header("Location: submit_marks.php?status=success&score=" . $total_score);
         exit();
     } catch (PDOException $e) {
@@ -59,10 +61,12 @@ if (isset($_GET['status']) && $_GET['status'] == 'success') {
     $success_message = "Assessment submitted successfully! Final Weighted Score: <strong>" . htmlspecialchars($_GET['score']) . " / 100</strong>";
 }
 
+// 获取已评估的学生，包含评语数据
 $sql_evaluated = "SELECT i.internship_id, s.student_id, s.student_name, 
                          a.total_score, a.task_score, a.health_safety_score, 
                          a.connectivity_score, a.report_score, a.clarity_score, 
-                         a.lifelong_score, a.project_mgmt_score, a.time_mgmt_score
+                         a.lifelong_score, a.project_mgmt_score, a.time_mgmt_score,
+                         a.qualitative_comments
                   FROM Internships i
                   JOIN Students s ON i.student_id = s.student_id
                   JOIN Assessments a ON i.internship_id = a.internship_id
@@ -71,6 +75,15 @@ $sql_evaluated = "SELECT i.internship_id, s.student_id, s.student_name,
 $stmt_evaluated = $pdo->prepare($sql_evaluated);
 $stmt_evaluated->execute(['assessor_id' => $assessor_id]);
 $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
+
+// 计算全班平均分
+$total_students_evaluated = count($evaluated_students);
+$average_score = 0;
+if ($total_students_evaluated > 0) {
+    $sum = 0;
+    foreach ($evaluated_students as $student) { $sum += $student['total_score']; }
+    $average_score = round($sum / $total_students_evaluated, 2);
+}
 ?>
 
 <!DOCTYPE html>
@@ -104,13 +117,15 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
         .moodle-table { width: 100%; border-collapse: collapse; font-size: 13.5px; white-space: nowrap; }
         .moodle-table th, .moodle-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
         .moodle-table th { background-color: #f8f9fa; color: #10263b; cursor: pointer; user-select: none; }
+        .moodle-table tbody tr { cursor: pointer; transition: background-color 0.2s ease; }
         .moodle-table tbody tr:hover { background-color: #f1f3f5; }
+        
         .th-content { display: flex; align-items: center; justify-content: space-between; }
         .weight-text { color: #7a327e; font-size: 11px; margin-left: 5px; font-weight: normal; }
         .sort-icons { display: flex; flex-direction: column; font-size: 9px; margin-left: 8px; color: #ced4da; }
         .active-sort { color: #7a327e; }
 
-        /* 弹窗样式 (必须保持两个页面一致) */
+        /* 统一弹窗样式 */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -121,8 +136,28 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
         .moodle-modal-footer { padding: 15px 25px; border-top: 1px solid #dee2e6; text-align: right; background-color: #f8f9fa; }
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
-        .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 12px 35px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
+
+        /* 平均分卡片 */
+        .stats-dashboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; }
+        .stats-box { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 4px; display: flex; align-items: center; gap: 15px; white-space: nowrap; }
+        .stats-label { font-size: 15px; color: #555; font-weight: bold; }
+        .stats-value { font-size: 24px; color: #7a327e; font-weight: bold; }
+        
+        .detail-raw-score { font-size: 16px; color: #10263b; }
+        
+        /* 登出按钮的悬停特效 */
+        .logout-link { 
+            color: #555; 
+            text-decoration: none; 
+            font-size: 14px; 
+            transition: all 0.2s ease; 
+        }
+        .logout-link:hover { 
+            color: #842029; 
+            text-decoration: underline; 
+        }
     </style>
 </head>
 <body>
@@ -137,7 +172,7 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
         <div class="nav-right-white">
-            <a href="../logout.php" style="color: #555; text-decoration: none; font-size: 14px;">Log out</a>
+            <a href="../logout.php" class="logout-link">Log out</a>
             <div class="user-avatar"><?= $initial ?></div>
         </div>
     </nav>
@@ -154,11 +189,19 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
 
         <div class="moodle-card-white">
             <h2 class="section-title">My Evaluated Students (Weighted Scores)</h2>
-            <input type="text" id="searchInput" class="moodle-search-bar" placeholder="Search ID or Name..." onkeyup="filterResults()">
             
-            <?php if (count($evaluated_students) == 0): ?>
+            <?php if ($total_students_evaluated == 0): ?>
+                <input type="text" id="searchInput" class="moodle-search-bar" placeholder="Search ID or Name..." disabled>
                 <div style="padding: 30px; text-align: center; color: #666; margin-top:20px;">No students have been evaluated yet.</div>
             <?php else: ?>
+                <div class="stats-dashboard">
+                    <input type="text" id="searchInput" class="moodle-search-bar" placeholder="Search ID or Name..." onkeyup="filterResults()" style="flex-grow: 1;">
+                    <div class="stats-box">
+                        <span class="stats-label">Class Average:</span>
+                        <span class="stats-value"><?= number_format($average_score, 2) ?></span>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="moodle-table" id="resultsTable">
                         <thead>
@@ -178,7 +221,20 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
                         </thead>
                         <tbody>
                             <?php foreach($evaluated_students as $row): ?>
-                                <tr>
+                                <tr class="evaluated-row" title="Double-click to view full details and comments"
+                                    data-id="<?= htmlspecialchars($row['student_id']) ?>"
+                                    data-name="<?= htmlspecialchars($row['student_name']) ?>"
+                                    data-task="<?= htmlspecialchars($row['task_score']) ?>"
+                                    data-health="<?= htmlspecialchars($row['health_safety_score']) ?>"
+                                    data-conn="<?= htmlspecialchars($row['connectivity_score']) ?>"
+                                    data-report="<?= htmlspecialchars($row['report_score']) ?>"
+                                    data-clarity="<?= htmlspecialchars($row['clarity_score']) ?>"
+                                    data-life="<?= htmlspecialchars($row['lifelong_score']) ?>"
+                                    data-proj="<?= htmlspecialchars($row['project_mgmt_score']) ?>"
+                                    data-time="<?= htmlspecialchars($row['time_mgmt_score']) ?>"
+                                    data-total="<?= number_format($row['total_score'], 2) ?>"
+                                    data-comments="<?= htmlspecialchars($row['qualitative_comments']) ?>">
+                                    
                                     <td><?= htmlspecialchars($row['student_id']) ?></td>
                                     <td><?= htmlspecialchars($row['student_name']) ?></td>
                                     <td><?= number_format($row['task_score'] * 0.10, 2) ?></td>
@@ -199,6 +255,42 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
+    <div id="studentDetailsModal" class="moodle-modal-overlay">
+        <div class="moodle-modal-box" style="max-width: 700px;">
+            <div class="moodle-modal-header">
+                <h2>Assessment Details: <span id="detailStudentName" style="color: #7a327e;"></span></h2>
+                <span class="moodle-close-x" id="closeDetailsX">&times;</span>
+            </div>
+            <div class="moodle-modal-body">
+                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #dee2e6; padding-bottom: 15px; margin-bottom: 20px;">
+                    <div style="font-size: 16px;"><strong>Student ID:</strong> <span id="detailId"></span></div>
+                    <div style="font-size: 16px;"><strong>Final Weighted Score:</strong> <span id="detailTotal" style="color: #7a327e; font-size: 22px; font-weight: bold;"></span> / 100</div>
+                </div>
+                
+                <h4 style="margin-top: 0; color: #10263b;">Raw Component Scores (Out of 100)</h4>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; margin-bottom: 25px;">
+                    <ul style="column-count: 2; column-gap: 30px; margin: 0; padding-left: 20px; color: #555;">
+                        <li style="margin-bottom: 8px;">Tasks/Projects: <strong class="detail-raw-score" id="detTask"></strong></li>
+                        <li style="margin-bottom: 8px;">Health & Safety: <strong class="detail-raw-score" id="detHealth"></strong></li>
+                        <li style="margin-bottom: 8px;">Connectivity/Theory: <strong class="detail-raw-score" id="detConn"></strong></li>
+                        <li style="margin-bottom: 8px;">Report Presentation: <strong class="detail-raw-score" id="detReport"></strong></li>
+                        <li style="margin-bottom: 8px;">Clarity of Language: <strong class="detail-raw-score" id="detClarity"></strong></li>
+                        <li style="margin-bottom: 8px;">Lifelong Learning: <strong class="detail-raw-score" id="detLife"></strong></li>
+                        <li style="margin-bottom: 8px;">Project Management: <strong class="detail-raw-score" id="detProj"></strong></li>
+                        <li style="margin-bottom: 8px;">Time Management: <strong class="detail-raw-score" id="detTime"></strong></li>
+                    </ul>
+                </div>
+
+                <h4 style="color: #10263b; margin-bottom: 10px;">Qualitative Comments</h4>
+                <div id="detailComments" style="background-color: #fcfbf9; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; min-height: 80px; color: #333; line-height: 1.5; white-space: pre-wrap;">
+                </div>
+            </div>
+            <div class="moodle-modal-footer">
+                <button id="closeDetailsBtn" class="moodle-btn-submit" style="margin-top:0; background-color: #6c757d;">Close</button>
+            </div>
+        </div>
+    </div>
+
     <div id="rubricModal" class="moodle-modal-overlay">
         <div class="moodle-modal-box">
             <div class="moodle-modal-header">
@@ -206,7 +298,6 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
                 <span class="moodle-close-x" id="closeRubricModalX">&times;</span>
             </div>
             <div class="moodle-modal-body">
-                
                 <div style="background-color: #e8f0fe; border-left: 4px solid #10263b; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
                     <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
                     <span style="color: #555; font-size: 14px;">If you made an error in grading, require score adjustments after submission, or encounter any system issues, please contact our Database Administrator:</span>
@@ -243,16 +334,45 @@ $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-        // 弹窗逻辑
-        var modal = document.getElementById("rubricModal");
+        // 弹窗逻辑 - Grading Rubric
+        var rubricModal = document.getElementById("rubricModal");
         var btn = document.getElementById("openRubricModalBtn");
         var span = document.getElementById("closeRubricModalX");
         var closeBtn = document.getElementById("closeRubricModalBtn");
+        btn.onclick = function() { rubricModal.style.display = "flex"; }
+        span.onclick = function() { rubricModal.style.display = "none"; }
+        closeBtn.onclick = function() { rubricModal.style.display = "none"; }
 
-        btn.onclick = function() { modal.style.display = "flex"; }
-        span.onclick = function() { modal.style.display = "none"; }
-        closeBtn.onclick = function() { modal.style.display = "none"; }
-        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+        // 弹窗逻辑 - 双击查看学生详情
+        var detailsModal = document.getElementById("studentDetailsModal");
+        document.querySelectorAll('.evaluated-row').forEach(row => {
+            row.addEventListener('dblclick', function() {
+                document.getElementById('detailStudentName').innerText = this.getAttribute('data-name');
+                document.getElementById('detailId').innerText = this.getAttribute('data-id');
+                document.getElementById('detailTotal').innerText = this.getAttribute('data-total');
+                
+                document.getElementById('detTask').innerText = this.getAttribute('data-task');
+                document.getElementById('detHealth').innerText = this.getAttribute('data-health');
+                document.getElementById('detConn').innerText = this.getAttribute('data-conn');
+                document.getElementById('detReport').innerText = this.getAttribute('data-report');
+                document.getElementById('detClarity').innerText = this.getAttribute('data-clarity');
+                document.getElementById('detLife').innerText = this.getAttribute('data-life');
+                document.getElementById('detProj').innerText = this.getAttribute('data-proj');
+                document.getElementById('detTime').innerText = this.getAttribute('data-time');
+                
+                document.getElementById('detailComments').innerText = this.getAttribute('data-comments');
+                
+                detailsModal.style.display = "flex";
+            });
+        });
+
+        document.getElementById("closeDetailsX").onclick = function() { detailsModal.style.display = "none"; }
+        document.getElementById("closeDetailsBtn").onclick = function() { detailsModal.style.display = "none"; }
+
+        window.onclick = function(event) { 
+            if (event.target == rubricModal) rubricModal.style.display = "none"; 
+            if (event.target == detailsModal) detailsModal.style.display = "none"; 
+        }
 
         // 搜索过滤与排序逻辑
         function filterResults() {

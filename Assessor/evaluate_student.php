@@ -54,7 +54,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 12px 35px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 25px; font-weight: bold; }
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
 
-        /* 终极 ComboBox 样式 (带小三角的下拉搜索框) */
+        /* 智能 ComboBox 样式 */
         .autocomplete-wrapper { position: relative; width: 100%; }
         .dropdown-caret { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 12px; pointer-events: none; }
         #student_search { padding-right: 35px; cursor: pointer; }
@@ -64,7 +64,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .custom-dropdown-item:last-child { border-bottom: none; }
         .highlight-match { background-color: #ffeb3b; color: #1d2125; font-weight: bold; border-radius: 2px; padding: 0 2px; }
 
-        /* 弹窗样式 */
+        /* 弹窗核心样式 */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -75,6 +75,18 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .moodle-modal-footer { padding: 15px 25px; border-top: 1px solid #dee2e6; text-align: right; background-color: #f8f9fa; }
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
+        
+        /* 登出按钮的悬停特效 */
+        .logout-link { 
+            color: #555; 
+            text-decoration: none; 
+            font-size: 14px; 
+            transition: all 0.2s ease; 
+        }
+        .logout-link:hover { 
+            color: #842029; 
+            text-decoration: underline; 
+        }
     </style>
 </head>
 <body>
@@ -89,7 +101,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
         <div class="nav-right-white">
-            <a href="../logout.php" style="color: #555; text-decoration: none; font-size: 14px;">Log out</a>
+            <a href="../logout.php" class="logout-link">Log out</a>
             <div class="user-avatar"><?= $initial ?></div>
         </div>
     </nav>
@@ -132,6 +144,28 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
                     <button type="submit" class="moodle-btn-submit">Save changes</button>
                 </form>
             <?php endif; ?>
+        </div>
+    </div>
+
+    <div id="confirmSubmitModal" class="moodle-modal-overlay">
+        <div class="moodle-modal-box" style="max-width: 550px;">
+            <div class="moodle-modal-header">
+                <h2>Confirm Submission</h2>
+                <span class="moodle-close-x" id="closeConfirmX">&times;</span>
+            </div>
+            <div class="moodle-modal-body" style="padding: 30px;">
+                <h3 style="color: #10263b; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 20px;">Are you sure you want to submit this assessment?</h3>
+                <div style="background-color: #f8f9fa; border-left: 4px solid #7a327e; padding: 15px; border-radius: 0 4px 4px 0;">
+                    <p style="color: #555; font-size: 16px; line-height: 1.6; margin: 0;">
+                        Once confirmed, the grades and comments will be permanently saved to the database and <strong style="color: #842029;">cannot be modified</strong>. <br><br>
+                        Please ensure all entered raw scores and your qualitative comments are accurate.
+                    </p>
+                </div>
+            </div>
+            <div class="moodle-modal-footer">
+                <button type="button" id="cancelSubmitBtn" style="background-color: #f8f9fa; color: #555; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: bold; font-size: 15px;">Cancel</button>
+                <button type="button" id="finalSubmitBtn" class="moodle-btn-submit" style="margin-top:0; padding: 10px 25px; font-size: 15px;">Confirm & Submit</button>
+            </div>
         </div>
     </div>
 
@@ -178,23 +212,48 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-        // 弹窗逻辑
+        // 弹窗逻辑 (Rubric)
         var modal = document.getElementById("rubricModal");
         var btn = document.getElementById("openRubricModalBtn");
         var span = document.getElementById("closeRubricModalX");
         var closeBtn = document.getElementById("closeRubricModalBtn");
-
         btn.onclick = function() { modal.style.display = "flex"; }
         span.onclick = function() { modal.style.display = "none"; }
         closeBtn.onclick = function() { modal.style.display = "none"; }
-        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+        
+        // 提交确认弹窗逻辑
+        var confirmModal = document.getElementById("confirmSubmitModal");
+        var closeConfirmX = document.getElementById("closeConfirmX");
+        var cancelSubmitBtn = document.getElementById("cancelSubmitBtn");
+        var finalSubmitBtn = document.getElementById("finalSubmitBtn");
+        var evalForm = document.getElementById('evalForm');
+        var hiddenId = document.getElementById('hidden_internship_id');
+
+        if(evalForm) {
+            evalForm.addEventListener('submit', function(e) {
+                e.preventDefault(); 
+                if(hiddenId.value === '') {
+                    alert('Please select a valid student from the dropdown list.');
+                    return;
+                }
+                confirmModal.style.display = "flex";
+            });
+        }
+        
+        closeConfirmX.onclick = function() { confirmModal.style.display = "none"; }
+        cancelSubmitBtn.onclick = function() { confirmModal.style.display = "none"; }
+        
+        finalSubmitBtn.onclick = function() { evalForm.submit(); }
+
+        window.onclick = function(event) { 
+            if (event.target == modal) modal.style.display = "none"; 
+            if (event.target == confirmModal) confirmModal.style.display = "none"; 
+        }
 
         // 智能下拉框逻辑
         const studentsData = <?php echo json_encode($pending_students); ?>;
         const searchInput = document.getElementById('student_search');
         const dropdown = document.getElementById('custom_dropdown');
-        const hiddenId = document.getElementById('hidden_internship_id');
-        const evalForm = document.getElementById('evalForm');
 
         if(searchInput) {
             function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -236,12 +295,6 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
                 renderList(this.value.trim());
             });
             document.addEventListener('click', function() { dropdown.style.display = 'none'; });
-            evalForm.addEventListener('submit', function(e) {
-                if(hiddenId.value === '') {
-                    e.preventDefault();
-                    alert('Please select a valid student from the dropdown list.');
-                }
-            });
         }
 
         // 分数实时计算
