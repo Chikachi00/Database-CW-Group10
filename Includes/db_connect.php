@@ -3,7 +3,7 @@
 $host = 'localhost';
 $dbname = 'COMP1044_CW_DB'; // 咱们之前SQL里建的数据库名
 $username = 'root';         // XAMPP 默认账号
-$password = '';             // XAMPP 默认密码为空
+$password = 'root';           // XAMPP 默认密码为空
 
 try {
     // 使用 PDO 连接数据库，这是目前最推荐的安全连接方式

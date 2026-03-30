@@ -1,99 +1,262 @@
+<?php
+// Assessor/evaluate_student.php
+session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Assessor') {
+    header("Location: ../login.php");
+    exit();
+}
+
+require_once '../Includes/db_connect.php';
+
+$assessor_id = $_SESSION['user_id'];
+$username = $_SESSION['username'];
+$initial = strtoupper(substr($username, 0, 1)); 
+
+// 获取【未评分】的学生，默认按学号升序排列
+$sql_pending = "SELECT i.internship_id, s.student_id, s.student_name 
+                FROM Internships i
+                JOIN Students s ON i.student_id = s.student_id
+                LEFT JOIN Assessments a ON i.internship_id = a.internship_id
+                WHERE i.assessor_id = :assessor_id AND a.assessment_id IS NULL
+                ORDER BY s.student_id ASC";
+$stmt_pending = $pdo->prepare($sql_pending);
+$stmt_pending->execute(['assessor_id' => $assessor_id]);
+$pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Internship Assessment Entry</title>
+    <title>Evaluate Student - Assessor View</title>
     <style>
-        /* basic styling */
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { color: #333; text-align: center; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-        input[type="number"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .total-box { background: #e9ecef; padding: 15px; text-align: right; font-size: 18px; font-weight: bold; margin-top: 20px; border-radius: 4px; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 15px; }
-        button:hover { background: #0056b3; }
+        body { background-color: #f8f9fa; color: #1d2125; font-family: Arial, Helvetica, sans-serif; margin: 0; padding-top: 80px; }
+        .moodle-navbar-white { background-color: #ffffff; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; height: 70px; border-bottom: 1px solid #dee2e6; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+        .nav-left-white { display: flex; align-items: center; height: 100%; }
+        .nav-logo-white { height: 68px; width: auto; margin-right: 25px; border-right: 1px solid #dee2e6; padding-right: 25px; display: block; }
+        .nav-links { display: flex; gap: 25px; align-items: center; height: 100%; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 15px; font-weight: 500; height: 100%; display: flex; align-items: center; border-bottom: 3px solid transparent; box-sizing: border-box; cursor: pointer; }
+        .nav-links a:hover { color: #10263b; text-decoration: underline; }
+        .nav-links a.active-link { color: rgba(16, 38, 59, 0.9); border-bottom: 3px solid #7a327e; }
+        
+        .nav-right-white { display: flex; align-items: center; gap: 20px; }
+        .user-avatar { background-color: #7a327e; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; }
+        .moodle-page-header { max-width: 95%; margin: 20px auto 20px; font-size: 30px; color: #10263b; font-weight: normal; }
+        .moodle-dashboard-container { max-width: 95%; margin: 0 auto 60px; padding: 0 25px; }
+        .moodle-card-white { background-color: #ffffff; border: 1px solid #e1e1e1; border-radius: 8px; padding: 40px; }
+        .section-title { font-size: 20px; color: #10263b; border-bottom: 2px solid #dee2e6; padding-bottom: 12px; margin-bottom: 30px; margin-top:0; }
+        
+        .score-input { width: 100%; padding: 12px 18px; border: 1px solid #8f959e; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
+        .score-input:focus { outline: none; border-color: #10263b; box-shadow: 0 0 0 2px rgba(16, 38, 59, 0.2); background-color: #e8f0fe; }
+        .moodle-form-label { display: block; font-weight: bold; margin-bottom: 10px; color: #1d2125; font-size: 15px; }
+        .score-display-box { background-color: #f8f9fa; padding: 20px; text-align: right; font-size: 20px; font-weight: bold; margin-top: 30px; border-radius: 6px; color: #10263b; border: 1px solid #dee2e6; }
+        .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 12px 35px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 25px; font-weight: bold; }
+        .moodle-btn-submit:hover { background-color: #0d1e2e; }
+
+        /* 终极 ComboBox 样式 (带小三角的下拉搜索框) */
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .dropdown-caret { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 12px; pointer-events: none; }
+        #student_search { padding-right: 35px; cursor: pointer; }
+        .custom-dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background-color: #ffffff; border: 1px solid #8f959e; border-top: none; border-radius: 0 0 4px 4px; max-height: 250px; overflow-y: auto; z-index: 1001; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .custom-dropdown-item { padding: 12px 18px; cursor: pointer; color: #555; font-size: 16px; border-bottom: 1px solid #f1f3f5; }
+        .custom-dropdown-item:hover { background-color: #f1f3f5; color: #10263b; }
+        .custom-dropdown-item:last-child { border-bottom: none; }
+        .highlight-match { background-color: #ffeb3b; color: #1d2125; font-weight: bold; border-radius: 2px; padding: 0 2px; }
+
+        /* 弹窗样式 */
+        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
+        .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
+        .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
+        .moodle-modal-header h2 { margin: 0; font-size: 20px; color: #10263b; }
+        .moodle-close-x { font-size: 24px; font-weight: bold; color: #888; cursor: pointer; }
+        .moodle-close-x:hover { color: #333; }
+        .moodle-modal-body { padding: 25px; font-size: 15px; line-height: 1.6; color: #333; }
+        .moodle-modal-footer { padding: 15px 25px; border-top: 1px solid #dee2e6; text-align: right; background-color: #f8f9fa; }
+        .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
+        .admin-link:hover { color: #7a327e; text-decoration: underline; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Enter Internship Marks</h2>
-    <p style="color: #666; text-align: center;">Evaluating Student: <strong>Alice Wong (S2024001)</strong></p>
-
-    <form action="submit_marks.php" method="POST" id="assessmentForm">
-        <input type="hidden" name="internship_id" value="1">
-
-        <div class="form-group">
-            <label for="task_score">Undertaking Tasks/Projects (Max 10):</label>
-            <input type="number" id="task_score" name="task_score" min="0" max="10" step="0.1" class="score-input" required>
+    <nav class="moodle-navbar-white">
+        <div class="nav-left-white">
+            <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
+            <div class="nav-links">
+                <a href="evaluate_student.php" class="active-link">Evaluate</a>
+                <a href="submit_marks.php">View Results</a>
+                <a id="openRubricModalBtn">Grading Rubric & Help</a>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label for="health_safety_score">Health & Safety Requirements (Max 10):</label>
-            <input type="number" id="health_safety_score" name="health_safety_score" min="0" max="10" step="0.1" class="score-input" required>
+        <div class="nav-right-white">
+            <a href="../logout.php" style="color: #555; text-decoration: none; font-size: 14px;">Log out</a>
+            <div class="user-avatar"><?= $initial ?></div>
         </div>
+    </nav>
 
-        <div class="form-group">
-            <label for="connectivity_score">Connectivity and Theoretical Knowledge (Max 10):</label>
-            <input type="number" id="connectivity_score" name="connectivity_score" min="0" max="10" step="0.1" class="score-input" required>
+    <div class="moodle-dashboard-container" style="margin-top: 30px;">
+        <h1 class="moodle-page-header" style="margin-left: 0;">Internship Assessment (Assessor View)</h1>
+
+        <div class="moodle-card-white">
+            <h2 class="section-title">Evaluate Assigned Student</h2>
+            <?php if (count($pending_students) == 0): ?>
+                <p style="text-align:center; color:#666; background:#f8f9fa; padding:40px; border-radius:4px;">No pending evaluations. All caught up!</p>
+            <?php else: ?>
+                <form action="submit_marks.php" method="POST" id="evalForm">
+                    
+                    <div style="background:#f8f9fa; padding:20px; border:1px solid #dee2e6; border-radius:6px; margin-bottom: 20px;">
+                        <label class="moodle-form-label">Search or Select Student (By ID or Name):</label>
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="student_search" class="score-input" placeholder="Click to view all, or type to search..." autocomplete="off" required>
+                            <span class="dropdown-caret">&#9660;</span>
+                            <div id="custom_dropdown" class="custom-dropdown-list"></div>
+                        </div>
+                        <input type="hidden" name="internship_id" id="hidden_internship_id" required>
+                    </div>
+
+                    <div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Undertaking Tasks/Projects (Max 100):</label><input type="number" id="task_score" name="task_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Health and Safety Requirements at the Workplace (Max 100):</label><input type="number" id="health_safety_score" name="health_safety_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Connectivity and Use of Theoretical Knowledge (Max 100):</label><input type="number" id="connectivity_score" name="connectivity_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Presentation of the Report as a Written Document (Max 100):</label><input type="number" id="report_score" name="report_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Clarity of Language and Illustration (Max 100):</label><input type="number" id="clarity_score" name="clarity_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Lifelong Learning Activities (Max 100):</label><input type="number" id="lifelong_score" name="lifelong_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Project Management (Max 100):</label><input type="number" id="project_mgmt_score" name="project_mgmt_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Time Management (Max 100):</label><input type="number" id="time_mgmt_score" name="time_mgmt_score" min="0" max="100" step="1" class="score-input" required></div>
+                    </div>
+                    
+                    <label class="moodle-form-label" style="margin-top:25px;">Qualitative Comments:</label>
+                    <textarea name="qualitative_comments" rows="4" class="score-input" style="font-family:inherit; resize:vertical;" placeholder="Provide justification for the assigned scores..." required></textarea>
+                    
+                    <div class="score-display-box">Final Weighted Total: <span id="display_total" style="color:#7a327e;">0.00</span> / 100</div>
+                    <button type="submit" class="moodle-btn-submit">Save changes</button>
+                </form>
+            <?php endif; ?>
         </div>
+    </div>
 
-        <div class="form-group">
-            <label for="report_score">Presentation of the Report (Max 15):</label>
-            <input type="number" id="report_score" name="report_score" min="0" max="15" step="0.1" class="score-input" required>
+    <div id="rubricModal" class="moodle-modal-overlay">
+        <div class="moodle-modal-box">
+            <div class="moodle-modal-header">
+                <h2>Grading Rubric & Help</h2>
+                <span class="moodle-close-x" id="closeRubricModalX">&times;</span>
+            </div>
+            <div class="moodle-modal-body">
+                <div style="background-color: #e8f0fe; border-left: 4px solid #10263b; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
+                    <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
+                    <span style="color: #555; font-size: 14px;">If you made an error in grading, require score adjustments after submission, or encounter any system issues, please contact our Database Administrator:</span>
+                    <div style="margin-top: 8px;">
+                        &#128100; <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
+                        &#9993; <a href="mailto:ChyeCheah.Tan@nottingham.edu.my" class="admin-link">ChyeCheah.Tan@nottingham.edu.my</a>
+                    </div>
+                </div>
+
+                <p><strong>Assessment Guidelines:</strong></p>
+                <p style="color: #555; margin-bottom: 15px;">Assessors must evaluate students using the predefined criteria. Please enter the <strong>Raw Marks (0-100)</strong> for each component. The system will automatically calculate the final score based on these strict weightages:</p>
+                
+                <div style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 20px;">
+                    <ul style="column-count: 2; column-gap: 20px; margin: 0; padding-left: 20px; color: #333;">
+                        <li style="margin-bottom: 8px;">Tasks/Projects: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Health & Safety: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Connectivity/Theory: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Report Presentation: <strong>15%</strong></li>
+                        <li style="margin-bottom: 8px;">Clarity of Language: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Lifelong Learning: <strong>15%</strong></li>
+                        <li style="margin-bottom: 8px;">Project Management: <strong>15%</strong></li>
+                        <li style="margin-bottom: 8px;">Time Management: <strong>15%</strong></li>
+                    </ul>
+                </div>
+
+                <p style="color: #842029; background-color: #f8d7da; padding: 12px; border-radius: 4px; font-size: 14px; border: 1px solid #f5c2c7; margin: 0;">
+                    <strong>Mandatory Requirement:</strong> You must provide qualitative comments to justify the scores given. Weightages are fixed and cannot be modified.
+                </p>
+            </div>
+            <div class="moodle-modal-footer">
+                <button id="closeRubricModalBtn" class="moodle-btn-submit" style="margin-top:0; padding: 8px 20px;">Close</button>
+            </div>
         </div>
+    </div>
 
-        <div class="form-group">
-            <label for="clarity_score">Clarity of Language and Illustration (Max 10):</label>
-            <input type="number" id="clarity_score" name="clarity_score" min="0" max="10" step="0.1" class="score-input" required>
-        </div>
+    <script>
+        // 弹窗逻辑
+        var modal = document.getElementById("rubricModal");
+        var btn = document.getElementById("openRubricModalBtn");
+        var span = document.getElementById("closeRubricModalX");
+        var closeBtn = document.getElementById("closeRubricModalBtn");
 
-        <div class="form-group">
-            <label for="lifelong_score">Lifelong Learning Activities (Max 15):</label>
-            <input type="number" id="lifelong_score" name="lifelong_score" min="0" max="15" step="0.1" class="score-input" required>
-        </div>
+        btn.onclick = function() { modal.style.display = "flex"; }
+        span.onclick = function() { modal.style.display = "none"; }
+        closeBtn.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
 
-        <div class="form-group">
-            <label for="project_mgmt_score">Project Management (Max 15):</label>
-            <input type="number" id="project_mgmt_score" name="project_mgmt_score" min="0" max="15" step="0.1" class="score-input" required>
-        </div>
+        // 智能下拉框逻辑
+        const studentsData = <?php echo json_encode($pending_students); ?>;
+        const searchInput = document.getElementById('student_search');
+        const dropdown = document.getElementById('custom_dropdown');
+        const hiddenId = document.getElementById('hidden_internship_id');
+        const evalForm = document.getElementById('evalForm');
 
-        <div class="form-group">
-            <label for="time_mgmt_score">Time Management (Max 15):</label>
-            <input type="number" id="time_mgmt_score" name="time_mgmt_score" min="0" max="15" step="0.1" class="score-input" required>
-        </div>
+        if(searchInput) {
+            function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+            function renderList(filterText = '') {
+                dropdown.innerHTML = '';
+                let hasMatch = false;
+                const regex = filterText ? new RegExp('(' + escapeRegExp(filterText) + ')', 'gi') : null;
 
-        <div class="form-group">
-            <label for="comments">Qualitative Comments:</label>
-            <textarea id="comments" name="qualitative_comments" rows="4" placeholder="Enter comments to justify the scores..." required></textarea>
-        </div>
+                studentsData.forEach(s => {
+                    const displayText = s.student_id + ' - ' + s.student_name;
+                    if (!filterText || displayText.toLowerCase().includes(filterText.toLowerCase())) {
+                        hasMatch = true;
+                        const item = document.createElement('div');
+                        item.className = 'custom-dropdown-item';
+                        if (filterText) {
+                            item.innerHTML = displayText.replace(regex, '<span class="highlight-match">$1</span>');
+                        } else {
+                            item.innerText = displayText;
+                        }
+                        item.addEventListener('click', function(e) {
+                            e.stopPropagation(); 
+                            searchInput.value = displayText; 
+                            hiddenId.value = s.internship_id; 
+                            dropdown.style.display = 'none'; 
+                        });
+                        dropdown.appendChild(item);
+                    }
+                });
+                dropdown.style.display = hasMatch ? 'block' : 'none';
+            }
 
-        <div class="total-box">
-            Live Total Score: <span id="display_total">0.00</span> / 100
-        </div>
-
-        <button type="submit">Submit Assessment</button>
-    </form>
-</div>
-
-<script>
-    // JavaScript: 实时计算并验证表单
-    const inputs = document.querySelectorAll('.score-input');
-    const displayTotal = document.getElementById('display_total');
-
-    inputs.forEach(input => {
-        input.addEventListener('input', () => {
-            let total = 0;
-            inputs.forEach(inp => {
-                total += parseFloat(inp.value) || 0; // 如果为空则按 0 算
+            searchInput.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (dropdown.style.display === 'block') dropdown.style.display = 'none';
+                else renderList(this.value.trim()); 
             });
-            displayTotal.innerText = total.toFixed(2);
-        });
-    });
-</script>
+            searchInput.addEventListener('input', function() {
+                hiddenId.value = ''; 
+                renderList(this.value.trim());
+            });
+            document.addEventListener('click', function() { dropdown.style.display = 'none'; });
+            evalForm.addEventListener('submit', function(e) {
+                if(hiddenId.value === '') {
+                    e.preventDefault();
+                    alert('Please select a valid student from the dropdown list.');
+                }
+            });
+        }
 
+        // 分数实时计算
+        const weights = { 'task_score': 0.10, 'health_safety_score': 0.10, 'connectivity_score': 0.10, 'report_score': 0.15, 'clarity_score': 0.10, 'lifelong_score': 0.15, 'project_mgmt_score': 0.15, 'time_mgmt_score': 0.15 };
+        document.querySelectorAll('.score-input').forEach(i => {
+            if(i.type === 'number') {
+                i.addEventListener('input', () => {
+                    let total = 0;
+                    document.querySelectorAll('.score-input[type=\"number\"]').forEach(inp => {
+                        if(weights[inp.id]) total += (parseFloat(inp.value) || 0) * weights[inp.id];
+                    });
+                    document.getElementById('display_total').innerText = total.toFixed(2);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
