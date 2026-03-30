@@ -6,7 +6,7 @@ $username = 'root';         // XAMPP 默认账号
 $password = '';             // XAMPP 默认密码为空
 
 try {
-    // 使用 PDO 连接数据库，这是目前最推荐的安全连接方式
+    // 使用 PDO 连接数据库
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     // 设置报错模式为抛出异常，方便排错
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
