@@ -68,6 +68,8 @@ if ($total_students_evaluated > 0) {
         .moodle-modal-footer { padding: 15px 25px; border-top: 1px solid #dee2e6; text-align: right; background-color: #f8f9fa; }
         .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
+        .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
+        .admin-link:hover { color: #7a327e; text-decoration: underline; }
         
         /* 表头排序图标 */
         .th-content { display: flex; align-items: center; justify-content: space-between; }
@@ -84,7 +86,9 @@ if ($total_students_evaluated > 0) {
                 <a href="manage_students.php">Students</a>
                 <a href="manage_internships.php">Internships</a>
                 <a href="manage_users.php">Users</a>
-                <a href="view_all_results.php" class="active-link">Results</a> </div>
+                <a href="view_all_results.php" class="active-link">Results</a> 
+                <a id="openRubricModalBtn" style="cursor: pointer;">Help & Rubric</a>
+            </div>
         </div>
         <div class="nav-right-white">
             <a href="../logout.php" class="logout-link">Log out</a>
@@ -202,8 +206,51 @@ if ($total_students_evaluated > 0) {
         </div>
     </div>
 
+    <div id="rubricModal" class="moodle-modal-overlay">
+        <div class="moodle-modal-box" style="max-width: 650px;">
+            <div class="moodle-modal-header">
+                <h2>Admin Help & Grading Rubric</h2>
+                <span class="moodle-close-x" id="closeRubricModalX">&times;</span>
+            </div>
+            <div class="moodle-modal-body">
+                <div style="background-color: #e8f0fe; border-left: 4px solid #10263b; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
+                    <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
+                    <span style="color: #555; font-size: 14px;">If you encounter unexpected behavior, system crashes, issues with deleting linked records, or need database maintenance, please contact:</span>
+                    <div style="margin-top: 8px;">
+                        &#128100; <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
+                        &#9993; <a href="mailto:ChyeCheah.Tan@nottingham.edu.my" class="admin-link">ChyeCheah.Tan@nottingham.edu.my</a>
+                    </div>
+                </div>
+
+                <p><strong>System Guidelines & Potential Issues:</strong></p>
+                <ul style="color: #555; margin-bottom: 15px; font-size: 14px;">
+                    <li><strong>Record Deletion:</strong> You cannot delete a student or assessor if they have existing internship records linked to them.</li>
+                    <li><strong>Duplicate Entries:</strong> The system prevents adding users or students with IDs/Usernames that already exist.</li>
+                    <li><strong>Data Integrity:</strong> All modifications are permanently saved to maintain accurate internship records.</li>
+                </ul>
+
+                <p><strong>Reference: Assessment Weightages (Fixed):</strong></p>
+                <div style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 20px;">
+                    <ul style="column-count: 2; column-gap: 20px; margin: 0; padding-left: 20px; color: #333; font-size: 14px;">
+                        <li style="margin-bottom: 8px;">Tasks/Projects: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Health & Safety: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Connectivity/Theory: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Report Presentation: <strong>15%</strong></li>
+                        <li style="margin-bottom: 8px;">Clarity of Language: <strong>10%</strong></li>
+                        <li style="margin-bottom: 8px;">Lifelong Learning: <strong>15%</strong></li>
+                        <li style="margin-bottom: 8px;">Project Management: <strong>15%</strong></li>
+                        <li style="margin-bottom: 8px;">Time Management: <strong>15%</strong></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="moodle-modal-footer">
+                <button id="closeRubricModalBtn" class="moodle-btn-submit" style="margin-top:0; padding: 8px 20px;">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 弹窗逻辑
+        // 查看详情弹窗逻辑
         var detailsModal = document.getElementById("studentDetailsModal");
         document.querySelectorAll('.evaluated-row').forEach(row => {
             row.addEventListener('dblclick', function() {
@@ -229,7 +276,22 @@ if ($total_students_evaluated > 0) {
 
         document.getElementById("closeDetailsX").onclick = function() { detailsModal.style.display = "none"; }
         document.getElementById("closeDetailsBtn").onclick = function() { detailsModal.style.display = "none"; }
-        window.onclick = function(event) { if (event.target == detailsModal) detailsModal.style.display = "none"; }
+
+        // Help & Rubric 弹窗逻辑
+        var rubricModal = document.getElementById("rubricModal");
+        var openRubricBtn = document.getElementById("openRubricModalBtn");
+        var closeRubricX = document.getElementById("closeRubricModalX");
+        var closeRubricBtn = document.getElementById("closeRubricModalBtn");
+        
+        if(openRubricBtn) openRubricBtn.onclick = function() { rubricModal.style.display = "flex"; }
+        if(closeRubricX) closeRubricX.onclick = function() { rubricModal.style.display = "none"; }
+        if(closeRubricBtn) closeRubricBtn.onclick = function() { rubricModal.style.display = "none"; }
+
+        // 统一处理点击背景关闭所有弹窗
+        window.onclick = function(event) { 
+            if (event.target == detailsModal) detailsModal.style.display = "none"; 
+            if (event.target == rubricModal) rubricModal.style.display = "none";
+        }
 
         // 搜索与过滤逻辑
         function filterResults() {
