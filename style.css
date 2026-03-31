@@ -1,9 +1,84 @@
+/* =========================================
+   1. Moodle 登录页 1:1 像素级复刻样式 (Login Page)
+   ========================================= */
+body.moodle-login-body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #fcfbf9; 
+}
+.moodle-page-bg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.moodle-login-card {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 410px; 
+    padding: 40px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05); 
+    box-sizing: border-box;
+    border-radius: 6px;
+}
+.moodle-logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.moodle-logo-container img {
+    max-width: 250px;
+    height: auto;
+}
+.moodle-input-group {
+    margin-bottom: 15px;
+}
+.moodle-input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #8f959e;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+.moodle-input-group input:focus {
+    outline: none;
+    border-color: #10263b;
+    box-shadow: 0 0 0 2px rgba(16, 38, 59, 0.2);
+    background-color: #e8f0fe;
+}
+.moodle-btn-login {
+    background-color: #10263b;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+.moodle-btn-login:hover {
+    background-color: #0d1e2e;
+}
+.error-msg {
+    background-color: #f8d7da;
+    color: #842029;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid #f5c2c7;
+    text-align: center;
+}
+
 /* =========================================================
-   PROJECT GLOBAL STYLES (Nottingham/Moodle Style)
+   2. PROJECT GLOBAL STYLES (Admin & Assessor Dashboards)
    Derived from Assessor View for perfect visual parity.
    ========================================================= */
 
-/* 1. Global Reset & Fonts */
+/* Global Reset & Fonts */
 body { 
     background-color: #f8f9fa; 
     color: #1d2125; 
@@ -12,7 +87,7 @@ body {
     padding-top: 80px; /* Space for fixed navbar */
 }
 
-/* 2.白色标准导航栏 (Exact Parity) */
+/* 白色标准导航栏 (Exact Parity) */
 .moodle-navbar-white { 
     background-color: #ffffff; 
     display: flex; 
@@ -79,7 +154,7 @@ body {
     font-size: 16px; 
 }
 
-/* 3. 页面布局与卡片 */
+/* 页面布局与卡片 */
 .moodle-dashboard-container { 
     max-width: 95%; 
     margin: 0 auto 60px; 
@@ -110,16 +185,16 @@ body {
     margin-top: 0; 
 }
 
-/* 4. 表格样式 (结果查看页同款) */
+/* 表格样式 (结果查看页同款) */
 .table-responsive { width: 100%; overflow-x: auto; margin-top: 20px; border: 1px solid #dee2e6; border-radius: 4px; }
 .moodle-table { width: 100%; border-collapse: collapse; font-size: 13.5px; white-space: nowrap; }
 .moodle-table th, .moodle-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
 .moodle-table th { background-color: #f8f9fa; color: #10263b; }
 .moodle-table tbody tr:hover { background-color: #f1f3f5; cursor: pointer; }
 
-/* 5. 智能 ComboBox 黄色匹配特效 ( evaluate_student.php 同款) */
+/* 智能 ComboBox 黄色匹配特效 */
 .highlight-match { background-color: #ffeb3b; color: #1d2125; font-weight: bold; border-radius: 2px; padding: 0 2px; }
 
-/* 6. 通用工具类 */
+/* 通用工具类 */
 .admin-link { color: #10263b; text-decoration: none; font-weight: bold; }
 .admin-link:hover { color: #7a327e; text-decoration: underline; }
