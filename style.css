@@ -1,0 +1,160 @@
+/* =========================================
+   1. Moodle 登录页 1:1 像素级复刻样式
+   ========================================= */
+body.moodle-login-body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #fcfbf9; 
+}
+.moodle-page-bg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.moodle-login-card {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 410px; 
+    padding: 40px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05); 
+    box-sizing: border-box;
+}
+.moodle-logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.moodle-logo-container img {
+    max-width: 250px;
+    height: auto;
+}
+.moodle-input-group {
+    margin-bottom: 15px;
+}
+.moodle-input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #8f959e; 
+    font-size: 16px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border-radius: 2px;
+}
+.moodle-input-group input:focus {
+    background-color: #e8f0fe; 
+    outline: none;
+    border-color: #10263b; 
+    box-shadow: 0 0 0 1px #10263b; 
+}
+.moodle-btn-login {
+    background-color: #10263b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 22px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    border-radius: 2px;
+}
+.moodle-btn-login:hover { background-color: #0d1e2e; }
+.moodle-links { margin-top: 25px; }
+.moodle-links a { color: #555; text-decoration: underline; font-size: 14px; }
+.moodle-divider { border: 0; border-top: 1px solid #e1e1e1; margin: 25px 0; }
+.moodle-btn-cookies {
+    background-color: #7a327e;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+.moodle-btn-cookies:hover { background-color: #5e2661; }
+.error-msg {
+    color: #d9534f;
+    background-color: #fdf7f7;
+    border: 1px solid #d9534f;
+    padding: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+    border-radius: 2px;
+}
+
+/* =========================================
+   2. 内部管理页面 (1:1 复刻 Moodle 纯白风格)
+   ========================================= */
+body.moodle-internal-body {
+    background-color: #f8f9fa; 
+    color: #1d2125;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding-top: 70px; 
+}
+.moodle-navbar-white {
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 60px;
+    border-bottom: 1px solid #dee2e6; 
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+}
+.nav-left-white {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+.nav-logo-white {
+    height: 40px; 
+    margin-right: 25px;
+    border-right: 1px solid #dee2e6; 
+    padding-right: 25px;
+}
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+.nav-links a {
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+}
+.nav-links a:hover { color: #10263b; text-decoration: underline; }
+.nav-right-white {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.user-avatar {
+    background-color: #7a327e; 
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+.moodle-page-header {
+    max-width: 900px;
+    margin: 30px auto 20px;
+    font-size: 26px;
+    color: #10263b;
+    font-weight: normal;
+}
+.moodle-card-white {
+    background-color: #ffffff;
+    max-width: 900px;
+    margin: 0 auto 50px;
+    border: 1px solid #e1e1e1; 
+    border-radius: 6px;
+    padding: 30px;
+}
