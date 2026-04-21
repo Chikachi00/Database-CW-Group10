@@ -2,7 +2,7 @@
 // Admin/view_all_results.php
 session_start();
 
-// 1. 验证 Admin 身份
+//verify Admin identity
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
     header("Location: ../login.php");
     exit();
@@ -10,11 +10,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
 
 require_once '../Includes/db_connect.php';
 
-// 获取动态头像
+//  get first letter of username for avatar display
 $username = $_SESSION['username'];
 $initial = strtoupper(substr($username, 0, 1)); 
 
-// 2. Admin 专属 SQL：获取【全校所有】已评估的学生，并连表查询是哪个老师打的分
+// Fetch all evaluated students with their scores and assessor names
 $sql_evaluated = "SELECT i.internship_id, s.student_id, s.student_name, u.username as assessor_name,
                          a.total_score, a.task_score, a.health_safety_score, 
                          a.connectivity_score, a.report_score, a.clarity_score, 
@@ -29,7 +29,7 @@ $stmt_evaluated = $pdo->prepare($sql_evaluated);
 $stmt_evaluated->execute();
 $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
 
-// 计算全校平均分
+// average
 $total_students_evaluated = count($evaluated_students);
 $average_score = 0;
 if ($total_students_evaluated > 0) {
@@ -46,18 +46,18 @@ if ($total_students_evaluated > 0) {
     <title>View All Results - Admin Dashboard</title>
     <link rel="stylesheet" href="../style.css">
     <style>
-        /* 页面特有的微调样式 */
+        /* Dashboard Stats */
         .stats-dashboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; }
         .stats-box { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 4px; display: flex; align-items: center; gap: 15px; white-space: nowrap; }
         .stats-label { font-size: 15px; color: #555; font-weight: bold; }
         .stats-value { font-size: 24px; color: #7a327e; font-weight: bold; }
         .detail-raw-score { font-size: 16px; color: #10263b; }
         
-        /* 搜索框 */
+        /* search bar */
         .moodle-search-bar { width: 100%; padding: 12px 18px; border: 1px solid #8f959e; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
         .moodle-search-bar:focus { outline: none; border-color: #10263b; box-shadow: 0 0 0 2px rgba(16, 38, 59, 0.2); background-color: #e8f0fe; }
         
-        /* 弹窗组件 */
+        /* search modal */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -71,7 +71,7 @@ if ($total_students_evaluated > 0) {
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
         
-        /* 表头排序图标 */
+        /* Table Header */
         .th-content { display: flex; align-items: center; justify-content: space-between; }
         .sort-icons { display: flex; flex-direction: column; font-size: 9px; margin-left: 8px; color: #ced4da; }
         .active-sort { color: #7a327e; }
@@ -83,6 +83,7 @@ if ($total_students_evaluated > 0) {
         <div class="nav-left-white">
             <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
+                <a href="dashboard.php">Dashboard</a>
                 <a href="manage_students.php">Students</a>
                 <a href="manage_internships.php">Internships</a>
                 <a href="manage_users.php">Users</a>
@@ -112,6 +113,7 @@ if ($total_students_evaluated > 0) {
                         <span class="stats-label">University Average:</span>
                         <span class="stats-value"><?= number_format($average_score, 2) ?></span>
                     </div>
+                    <a href="export_results.php" class="moodle-btn-submit" style="text-decoration:none; padding: 12px 20px; white-space: nowrap;">&#128190; Export CSV</a>
                 </div>
 
                 <div class="table-responsive">
@@ -250,7 +252,7 @@ if ($total_students_evaluated > 0) {
     </div>
 
     <script>
-        // 查看详情弹窗逻辑
+        // view details modal logic
         var detailsModal = document.getElementById("studentDetailsModal");
         document.querySelectorAll('.evaluated-row').forEach(row => {
             row.addEventListener('dblclick', function() {
@@ -277,7 +279,7 @@ if ($total_students_evaluated > 0) {
         document.getElementById("closeDetailsX").onclick = function() { detailsModal.style.display = "none"; }
         document.getElementById("closeDetailsBtn").onclick = function() { detailsModal.style.display = "none"; }
 
-        // Help & Rubric 弹窗逻辑
+        // Help & Rubric 
         var rubricModal = document.getElementById("rubricModal");
         var openRubricBtn = document.getElementById("openRubricModalBtn");
         var closeRubricX = document.getElementById("closeRubricModalX");
@@ -287,13 +289,13 @@ if ($total_students_evaluated > 0) {
         if(closeRubricX) closeRubricX.onclick = function() { rubricModal.style.display = "none"; }
         if(closeRubricBtn) closeRubricBtn.onclick = function() { rubricModal.style.display = "none"; }
 
-        // 统一处理点击背景关闭所有弹窗
+        // Close modals when clicking outside the modal box
         window.onclick = function(event) { 
             if (event.target == detailsModal) detailsModal.style.display = "none"; 
             if (event.target == rubricModal) rubricModal.style.display = "none";
         }
 
-        // 搜索与过滤逻辑
+        // search filter 
         function filterResults() {
             let f = document.getElementById('searchInput').value.toUpperCase();
             document.querySelectorAll('#resultsTable tbody tr').forEach(r => {
@@ -301,7 +303,7 @@ if ($total_students_evaluated > 0) {
             });
         }
 
-        // 排序逻辑
+        // sorting 
         let curCol = -1, curDir = 'asc';
         function sortTable(idx, type) {
             const table = document.getElementById("resultsTable");

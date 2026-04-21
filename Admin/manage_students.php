@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
 
 require_once '../Includes/db_connect.php';
 
-// 获取动态头像
+//first letter of the username for avatar display
 $username = $_SESSION['username'];
 $initial = strtoupper(substr($username, 0, 1)); 
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     }
 }
 
-// 修改学生的逻辑
+// Update student details
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_student'])) {
     $update_id = trim($_POST['update_id']);
     $new_name = trim($_POST['edit_student_name']);
@@ -49,11 +49,17 @@ if (isset($_GET['delete_id'])) {
     try {
         $stmt = $pdo->prepare("DELETE FROM Students WHERE student_id = :id");
         $stmt->execute(['id' => $_GET['delete_id']]);
-        header("Location: manage_students.php"); 
+        // Redirect only on success to show a clean URL and avoid re-delete on refresh
+        header("Location: manage_students.php?deleted=1"); 
         exit();
     } catch (PDOException $e) {
         $error_msg = "Cannot delete student. They might have internship records linked to them.";
     }
+}
+
+// Show success message after successful deletion redirect
+if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
+    $success_msg = "Student deleted successfully!";
 }
 
 $stmt = $pdo->query("SELECT * FROM Students ORDER BY student_id ASC");
@@ -96,6 +102,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="nav-left-white">
             <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
+                <a href="dashboard.php">Dashboard</a>
                 <a href="manage_students.php" class="active-link">Students</a>
                 <a href="manage_internships.php">Internships</a>
                 <a href="manage_users.php">Users</a>
@@ -233,7 +240,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-    // 添加学生表单验证
+    // Client-side validation for Add Student form
     document.getElementById('addStudentForm').addEventListener('submit', function(event) {
         const studentId = document.getElementById('student_id').value.trim();
         const studentName = document.getElementById('student_name').value.trim();
@@ -242,7 +249,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
         if (!nameRegex.test(studentName)) { alert("Error: Student Name should only contain letters and spaces."); event.preventDefault(); return; }
     });
 
-    // Edit 弹窗逻辑
+    // Edit
     var editModal = document.getElementById("editModal");
     var closeEditX = document.getElementById("closeEditX");
     var cancelEditBtn = document.getElementById("cancelEditBtn");
@@ -258,7 +265,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     closeEditX.onclick = function() { editModal.style.display = "none"; }
     cancelEditBtn.onclick = function() { editModal.style.display = "none"; }
 
-    // Help & Rubric 弹窗逻辑
+    // Help & Rubric Modal
     var rubricModal = document.getElementById("rubricModal");
     var openRubricBtn = document.getElementById("openRubricModalBtn");
     var closeRubricX = document.getElementById("closeRubricModalX");
@@ -268,7 +275,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if(closeRubricX) closeRubricX.onclick = function() { rubricModal.style.display = "none"; }
     if(closeRubricBtn) closeRubricBtn.onclick = function() { rubricModal.style.display = "none"; }
 
-    // 统一处理点击背景关闭弹窗
+    // Close modals when clicking outside of them
     window.onclick = function(event) { 
         if (event.target == editModal) editModal.style.display = "none"; 
         if (event.target == rubricModal) rubricModal.style.display = "none";

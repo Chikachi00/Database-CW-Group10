@@ -23,10 +23,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['assign_internship'])) 
     }
 }
 
+// Update internship details (Student cannot be changed - delete and reassign instead)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_internship'])) {
+    $update_id = trim($_POST['update_id']);
+    $new_assessor = $_POST['edit_assessor_id'];
+    $new_company = trim($_POST['edit_company']);
+    $new_details = trim($_POST['edit_details']);
+
+    try {
+        $stmt = $pdo->prepare("UPDATE Internships SET assessor_id = :aid, company_name = :comp, other_details = :det WHERE internship_id = :id");
+        $stmt->execute(['aid' => $new_assessor, 'comp' => $new_company, 'det' => $new_details, 'id' => $update_id]);
+        $success_msg = "Internship details updated successfully!";
+    } catch (PDOException $e) {
+        $error_msg = "Error updating internship details.";
+    }
+}
+
+// Delete internship assignment
+if (isset($_GET['delete_id'])) {
+    try {
+        $stmt = $pdo->prepare("DELETE FROM Internships WHERE internship_id = :id");
+        $stmt->execute(['id' => $_GET['delete_id']]);
+        header("Location: manage_internships.php?deleted=1"); 
+        exit();
+    } catch (PDOException $e) {
+        $error_msg = "Cannot delete internship. An assessment record might already be linked to it.";
+    }
+}
+
+// Show success message after successful deletion redirect
+if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
+    $success_msg = "Internship assignment deleted successfully!";
+}
+
 $students = $pdo->query("SELECT student_id, student_name FROM Students")->fetchAll();
 $assessors = $pdo->query("SELECT user_id, username FROM Users WHERE role = 'Assessor'")->fetchAll();
 
-$sql = "SELECT i.internship_id, s.student_name, u.username as assessor_name, i.company_name 
+$sql = "SELECT i.internship_id, i.student_id, i.assessor_id, s.student_name, u.username as assessor_name, i.company_name, i.other_details
         FROM Internships i 
         JOIN Students s ON i.student_id = s.student_id 
         JOIN Users u ON i.assessor_id = u.user_id";
@@ -46,6 +79,13 @@ $internships = $pdo->query($sql)->fetchAll();
         .alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; font-size: 16px; }
         .alert-danger { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; font-size: 16px; }
         
+        .btn-action { padding: 8px 15px; font-size: 13px; border-radius: 4px; cursor: pointer; text-decoration: none; font-weight: bold; display: inline-block; margin-right: 5px; border: none; }
+        .btn-edit { background-color: #6c757d; color: white; }
+        .btn-edit:hover { background-color: #5a6268; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-danger:hover { background-color: #c82333; }
+        .moodle-form-label { display: block; font-weight: bold; margin-bottom: 8px; color: #1d2125; font-size: 14px; }
+        
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -64,6 +104,7 @@ $internships = $pdo->query($sql)->fetchAll();
         <div class="nav-left-white">
             <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
+                <a href="dashboard.php">Dashboard</a>
                 <a href="manage_students.php">Students</a>
                 <a href="manage_internships.php" class="active-link">Internships</a>
                 <a href="manage_users.php">Users</a>
@@ -88,7 +129,7 @@ $internships = $pdo->query($sql)->fetchAll();
             
             <div style="background:#f8f9fa; padding:20px; border:1px solid #dee2e6; border-radius:6px; margin-bottom: 25px;">
                 <label style="display:block; font-weight:bold; margin-bottom:15px; color:#1d2125; font-size:15px;">Assign Internship to Student</label>
-                <form method="POST">
+                <form id="assignForm" method="POST">
                     <select name="student_id" class="moodle-form-input" required>
                         <option value="">-- Select Student --</option>
                         <?php foreach ($students as $s): ?>
@@ -103,7 +144,7 @@ $internships = $pdo->query($sql)->fetchAll();
                         <?php endforeach; ?>
                     </select>
 
-                    <input type="text" name="company" class="moodle-form-input" placeholder="Company Name" required>
+                    <input type="text" id="company" name="company" class="moodle-form-input" placeholder="Company Name" required>
                     <input type="text" name="details" class="moodle-form-input" placeholder="Other Details (Optional)">
                     <button type="submit" name="assign_internship" class="moodle-btn-submit">Assign Internship</button>
                 </form>
@@ -112,20 +153,67 @@ $internships = $pdo->query($sql)->fetchAll();
             <div class="table-responsive">
                 <table class="moodle-table">
                     <thead>
-                        <tr><th>Assignment ID</th><th>Student</th><th>Assessor</th><th>Company</th></tr>
+                        <tr><th>Assignment ID</th><th>Student</th><th>Assessor</th><th>Company</th><th>Action</th></tr>
                     </thead>
                     <tbody>
                         <?php foreach ($internships as $row): ?>
                         <tr>
                             <td><?= $row['internship_id'] ?></td>
-                            <td><?= htmlspecialchars($row['student_name']) ?></td>
+                            <td><?= htmlspecialchars($row['student_name']) ?> (<?= htmlspecialchars($row['student_id']) ?>)</td>
                             <td><?= htmlspecialchars($row['assessor_name']) ?></td>
                             <td><?= htmlspecialchars($row['company_name']) ?></td>
+                            <td>
+                                <button class="btn-action btn-edit" 
+                                        onclick="openEditModal('<?= htmlspecialchars($row['internship_id']); ?>', '<?= htmlspecialchars($row['student_name']) . ' (' . htmlspecialchars($row['student_id']) . ')'; ?>', '<?= htmlspecialchars($row['assessor_id']); ?>', '<?= htmlspecialchars($row['company_name'], ENT_QUOTES); ?>', '<?= htmlspecialchars($row['other_details'], ENT_QUOTES); ?>')">Edit</button>
+                                <a href="manage_internships.php?delete_id=<?= $row['internship_id']; ?>" class="btn-action btn-danger" onclick="return confirm('WARNING: Are you sure you want to delete this internship assignment?');">Delete</a>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="moodle-modal-overlay">
+        <div class="moodle-modal-box" style="max-width: 600px;">
+            <div class="moodle-modal-header">
+                <h2>Edit Internship Assignment</h2>
+                <span class="moodle-close-x" id="closeEditX">&times;</span>
+            </div>
+            <form method="POST" action="manage_internships.php">
+                <div class="moodle-modal-body">
+                    <input type="hidden" id="update_id" name="update_id">
+
+                    <div style="margin-bottom: 15px;">
+                        <label class="moodle-form-label">Student (Cannot be changed):</label>
+                        <input type="text" id="display_student" class="moodle-form-input" style="background-color: #e9ecef; cursor: not-allowed; margin-bottom: 0;" disabled>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label class="moodle-form-label">Assessor:</label>
+                        <select id="edit_assessor_id" name="edit_assessor_id" class="moodle-form-input" style="margin-bottom: 0;" required>
+                            <?php foreach ($assessors as $a): ?>
+                                <option value="<?= $a['user_id'] ?>"><?= htmlspecialchars($a['username']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label class="moodle-form-label">Company Name:</label>
+                        <input type="text" id="edit_company" name="edit_company" class="moodle-form-input" style="margin-bottom: 0;" required>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label class="moodle-form-label">Other Details (Optional):</label>
+                        <input type="text" id="edit_details" name="edit_details" class="moodle-form-input" style="margin-bottom: 0;">
+                    </div>
+                </div>
+                <div class="moodle-modal-footer">
+                    <button type="button" id="cancelEditBtn" style="background-color: #f8f9fa; color: #555; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: bold; font-size: 15px;">Cancel</button>
+                    <button type="submit" name="update_internship" class="moodle-btn-submit" style="margin-top:0; padding: 10px 25px;">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -173,7 +261,30 @@ $internships = $pdo->query($sql)->fetchAll();
     </div>
 
     <script>
-        // Help & Rubric 弹窗逻辑
+        // Edit
+        var editModal = document.getElementById("editModal");
+        var closeEditX = document.getElementById("closeEditX");
+        var cancelEditBtn = document.getElementById("cancelEditBtn");
+
+        function openEditModal(id, studentDisplay, assessorId, company, details) {
+            document.getElementById('update_id').value = id;
+            document.getElementById('display_student').value = studentDisplay;
+            document.getElementById('edit_assessor_id').value = assessorId;
+            document.getElementById('edit_company').value = company;
+            document.getElementById('edit_details').value = details;
+            editModal.style.display = "flex";
+        }
+
+        closeEditX.onclick = function() { editModal.style.display = "none"; }
+        cancelEditBtn.onclick = function() { editModal.style.display = "none"; }
+
+        // Client-side validation for Assign Internship form
+        document.getElementById('assignForm').addEventListener('submit', function(event) {
+            const company = document.getElementById('company').value.trim();
+            if (company.length < 2) { alert("Error: Company Name must be at least 2 characters long."); event.preventDefault(); return; }
+        });
+
+        // Help & Rubric
         var rubricModal = document.getElementById("rubricModal");
         var openRubricBtn = document.getElementById("openRubricModalBtn");
         var closeRubricX = document.getElementById("closeRubricModalX");
@@ -185,6 +296,7 @@ $internships = $pdo->query($sql)->fetchAll();
 
         window.onclick = function(event) { 
             if (event.target == rubricModal) rubricModal.style.display = "none";
+            if (event.target == editModal) editModal.style.display = "none";
         }
     </script>
 </body>
