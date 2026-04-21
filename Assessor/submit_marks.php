@@ -16,7 +16,7 @@ $initial = strtoupper(substr($username, 0, 1));
 $success_message = "";
 $error_message = "";
 
-// 接收并处理前端表单提交的数据
+// receive form data, calculate total score,save to database
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['internship_id'])) {
     $internship_id = $_POST['internship_id'];
     $task = floatval($_POST['task_score']);
@@ -29,31 +29,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['internship_id'])) {
     $time = floatval($_POST['time_mgmt_score']);
     $comments = trim($_POST['qualitative_comments']);
 
-    $raw_total = ($task * 0.10) + ($health * 0.10) + ($connectivity * 0.10) + 
-                 ($report * 0.15) + ($clarity * 0.10) + ($lifelong * 0.15) + 
-                 ($project * 0.15) + ($time * 0.15);
-    $total_score = round($raw_total, 2);
+    // Server-side validation: all scores must be within 0-100 range
+    $all_scores = [
+        'Undertaking Tasks/Projects' => $task,
+        'Health and Safety' => $health,
+        'Connectivity/Theory' => $connectivity,
+        'Report Presentation' => $report,
+        'Clarity of Language' => $clarity,
+        'Lifelong Learning' => $lifelong,
+        'Project Management' => $project,
+        'Time Management' => $time
+    ];
+    $invalid_fields = [];
+    foreach ($all_scores as $label => $val) {
+        if ($val < 0 || $val > 100) {
+            $invalid_fields[] = $label;
+        }
+    }
 
-    try {
-        $sql_insert = "INSERT INTO Assessments (
-                    internship_id, task_score, health_safety_score, connectivity_score, 
-                    report_score, clarity_score, lifelong_score, project_mgmt_score, 
-                    time_mgmt_score, total_score, qualitative_comments
-                ) VALUES (
-                    :id, :task, :health, :conn, :rep, :clar, :life, :proj, :time_m, :total, :comm
-                )";
-        $stmt_insert = $pdo->prepare($sql_insert);
-        $stmt_insert->execute([
-            'id' => $internship_id, 'task' => $task, 'health' => $health, 'conn' => $connectivity,
-            'rep' => $report, 'clar' => $clarity, 'life' => $lifelong, 'proj' => $project,
-            'time_m' => $time, 'total' => $total_score, 'comm' => $comments
-        ]);
-        
-        // 提交成功后，重定向自身以防止刷新重复提交，并传递成功参数
-        header("Location: submit_marks.php?status=success&score=" . $total_score);
-        exit();
-    } catch (PDOException $e) {
-        $error_message = "Error saving assessment: " . $e->getMessage();
+    if (!empty($invalid_fields)) {
+        $error_message = "Invalid score range. All scores must be between 0 and 100. Please check: <strong>" . htmlspecialchars(implode(', ', $invalid_fields)) . "</strong>.";
+    } else if ($comments === '') {
+        $error_message = "Qualitative comments are required. Please provide justification for the assigned scores.";
+    } else if (!is_numeric($internship_id) || intval($internship_id) <= 0) {
+        $error_message = "Invalid student selection. Please go back and select a valid student.";
+    } else {
+        $raw_total = ($task * 0.10) + ($health * 0.10) + ($connectivity * 0.10) + 
+                     ($report * 0.15) + ($clarity * 0.10) + ($lifelong * 0.15) + 
+                     ($project * 0.15) + ($time * 0.15);
+        $total_score = round($raw_total, 2);
+
+        try {
+            $sql_insert = "INSERT INTO Assessments (
+                        internship_id, task_score, health_safety_score, connectivity_score, 
+                        report_score, clarity_score, lifelong_score, project_mgmt_score, 
+                        time_mgmt_score, total_score, qualitative_comments
+                    ) VALUES (
+                        :id, :task, :health, :conn, :rep, :clar, :life, :proj, :time_m, :total, :comm
+                    )";
+            $stmt_insert = $pdo->prepare($sql_insert);
+            $stmt_insert->execute([
+                'id' => $internship_id, 'task' => $task, 'health' => $health, 'conn' => $connectivity,
+                'rep' => $report, 'clar' => $clarity, 'life' => $lifelong, 'proj' => $project,
+                'time_m' => $time, 'total' => $total_score, 'comm' => $comments
+            ]);
+            
+            // calculate class average after new submission
+            header("Location: submit_marks.php?status=success&score=" . $total_score);
+            exit();
+        } catch (PDOException $e) {
+            $error_message = "Error saving assessment: " . $e->getMessage();
+        }
     }
 }
 
@@ -61,7 +87,7 @@ if (isset($_GET['status']) && $_GET['status'] == 'success') {
     $success_message = "Assessment submitted successfully! Final Weighted Score: <strong>" . htmlspecialchars($_GET['score']) . " / 100</strong>";
 }
 
-// 获取已评估的学生，包含评语数据
+// fetch all evaluated students for this assessor
 $sql_evaluated = "SELECT i.internship_id, s.student_id, s.student_name, 
                          a.total_score, a.task_score, a.health_safety_score, 
                          a.connectivity_score, a.report_score, a.clarity_score, 
@@ -76,7 +102,7 @@ $stmt_evaluated = $pdo->prepare($sql_evaluated);
 $stmt_evaluated->execute(['assessor_id' => $assessor_id]);
 $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
 
-// 计算全班平均分
+// calculate class average
 $total_students_evaluated = count($evaluated_students);
 $average_score = 0;
 if ($total_students_evaluated > 0) {
@@ -125,7 +151,7 @@ if ($total_students_evaluated > 0) {
         .sort-icons { display: flex; flex-direction: column; font-size: 9px; margin-left: 8px; color: #ced4da; }
         .active-sort { color: #7a327e; }
 
-        /* 统一弹窗样式 */
+        /* Modal Styles */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -139,7 +165,7 @@ if ($total_students_evaluated > 0) {
         .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
 
-        /* 平均分卡片 */
+        /* Stats Dashboard */
         .stats-dashboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; }
         .stats-box { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 4px; display: flex; align-items: center; gap: 15px; white-space: nowrap; }
         .stats-label { font-size: 15px; color: #555; font-weight: bold; }
@@ -147,7 +173,7 @@ if ($total_students_evaluated > 0) {
         
         .detail-raw-score { font-size: 16px; color: #10263b; }
         
-        /* 登出按钮的悬停特效 */
+        /* Logout Link */
         .logout-link { 
             color: #555; 
             text-decoration: none; 
@@ -334,7 +360,7 @@ if ($total_students_evaluated > 0) {
     </div>
 
     <script>
-        // 弹窗逻辑 - Grading Rubric
+        // Modal Logic - Grading Rubric
         var rubricModal = document.getElementById("rubricModal");
         var btn = document.getElementById("openRubricModalBtn");
         var span = document.getElementById("closeRubricModalX");
@@ -343,7 +369,7 @@ if ($total_students_evaluated > 0) {
         span.onclick = function() { rubricModal.style.display = "none"; }
         closeBtn.onclick = function() { rubricModal.style.display = "none"; }
 
-        // 弹窗逻辑 - 双击查看学生详情
+        // Modal Logic - Double-click to view student details
         var detailsModal = document.getElementById("studentDetailsModal");
         document.querySelectorAll('.evaluated-row').forEach(row => {
             row.addEventListener('dblclick', function() {
@@ -374,7 +400,7 @@ if ($total_students_evaluated > 0) {
             if (event.target == detailsModal) detailsModal.style.display = "none"; 
         }
 
-        // 搜索过滤与排序逻辑
+        // Search and Sort
         function filterResults() {
             let f = document.getElementById('searchInput').value.toUpperCase();
             document.querySelectorAll('#resultsTable tbody tr').forEach(r => {

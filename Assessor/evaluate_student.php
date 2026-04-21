@@ -13,7 +13,7 @@ $assessor_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 $initial = strtoupper(substr($username, 0, 1)); 
 
-// 获取【未评分】的学生，默认按学号升序排列
+// Fetch pending students for this assessor
 $sql_pending = "SELECT i.internship_id, s.student_id, s.student_name 
                 FROM Internships i
                 JOIN Students s ON i.student_id = s.student_id
@@ -54,7 +54,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 12px 35px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 25px; font-weight: bold; }
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
 
-        /* 智能 ComboBox 样式 */
+
         .autocomplete-wrapper { position: relative; width: 100%; }
         .dropdown-caret { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 12px; pointer-events: none; }
         #student_search { padding-right: 35px; cursor: pointer; }
@@ -64,7 +64,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .custom-dropdown-item:last-child { border-bottom: none; }
         .highlight-match { background-color: #ffeb3b; color: #1d2125; font-weight: bold; border-radius: 2px; padding: 0 2px; }
 
-        /* 弹窗核心样式 */
+        /* Modal Styles */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -76,7 +76,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
         
-        /* 登出按钮的悬停特效 */
+        /* Logout Link */
         .logout-link { 
             color: #555; 
             text-decoration: none; 
@@ -212,7 +212,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-        // 弹窗逻辑 (Rubric)
+        // Modal 
         var modal = document.getElementById("rubricModal");
         var btn = document.getElementById("openRubricModalBtn");
         var span = document.getElementById("closeRubricModalX");
@@ -221,7 +221,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         span.onclick = function() { modal.style.display = "none"; }
         closeBtn.onclick = function() { modal.style.display = "none"; }
         
-        // 提交确认弹窗逻辑
+        // Confirm submission modal logic
         var confirmModal = document.getElementById("confirmSubmitModal");
         var closeConfirmX = document.getElementById("closeConfirmX");
         var cancelSubmitBtn = document.getElementById("cancelSubmitBtn");
@@ -250,7 +250,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
             if (event.target == confirmModal) confirmModal.style.display = "none"; 
         }
 
-        // 智能下拉框逻辑
+        // Custom dropdown
         const studentsData = <?php echo json_encode($pending_students); ?>;
         const searchInput = document.getElementById('student_search');
         const dropdown = document.getElementById('custom_dropdown');
@@ -297,7 +297,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
             document.addEventListener('click', function() { dropdown.style.display = 'none'; });
         }
 
-        // 分数实时计算
+        // Real-time score calculation
         const weights = { 'task_score': 0.10, 'health_safety_score': 0.10, 'connectivity_score': 0.10, 'report_score': 0.15, 'clarity_score': 0.10, 'lifelong_score': 0.15, 'project_mgmt_score': 0.15, 'time_mgmt_score': 0.15 };
         document.querySelectorAll('.score-input').forEach(i => {
             if(i.type === 'number') {
