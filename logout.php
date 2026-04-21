@@ -1,8 +1,8 @@
 <?php
 // logout.php
 session_start();
-session_unset();     // 清空所有的 Session 变量
-session_destroy();   // 销毁 Session
-header("Location: login.php"); // 把用户踢回登录界面
+session_unset();     // clear all session variables
+session_destroy();   // destroy the session
+header("Location: login.php"); // redirect the user to the login page
 exit();
 ?>

@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-// 如果已经登录，直接跳走
+// if logged in, redirect based on role
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'Admin') {
-        header("Location: Admin/manage_students.php");
+        header("Location: Admin/dashboard.php");
         exit();
     } else if ($_SESSION['role'] === 'Assessor') {
         header("Location: Assessor/evaluate_student.php");
@@ -16,7 +16,7 @@ require_once 'Includes/db_connect.php';
 
 $error_msg = "";
 
-// 获取之前可能保存的用户名 Cookie
+// Check if remembered username in the cookie
 $remembered_user = isset($_COOKIE['remembered_username']) ? $_COOKIE['remembered_username'] : '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -24,23 +24,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST['password']);
 
     try {
-        // 假设你的表名是 Users，字段有 user_id, username, password, role
+        // securely query the database for the username
         $stmt = $pdo->prepare("SELECT * FROM Users WHERE username = :username");
         $stmt->execute(['username' => $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 验证密码（支持明文测试和哈希加密）
-        if ($user && ($password === $user['password'] || password_verify($password, $user['password']))) {
+        // verify password using secure hash comparison (never compare plain text)
+        if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
 
-            // 登录成功时，设置 Cookie 记住账号，有效期 30 天
+            // Set a cookie to remember the username for 30 days
             setcookie('remembered_username', $username, time() + (86400 * 30), "/");
 
-            // 根据角色重定向到不同文件夹
+            // redirect based on role
             if ($user['role'] === 'Admin') {
-                header("Location: Admin/manage_students.php");
+                header("Location: Admin/dashboard.php");
             } else {
                 header("Location: Assessor/evaluate_student.php");
             }
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Login - Internship Assessment System</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* 针对超链接的悬停效果 */
+        /* Login Page Styles */
         .moodle-links a {
             color: #10263b;
             text-decoration: none;
