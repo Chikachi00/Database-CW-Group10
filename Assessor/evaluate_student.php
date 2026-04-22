@@ -92,6 +92,8 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
     <nav class="moodle-navbar-white">
+        <div class="nav-left-white">
+            <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
                 <a href="evaluate_student.php" class="active-link">
                     Evaluate
@@ -100,8 +102,9 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
                     <?php endif; ?>
                 </a>
                 <a href="submit_marks.php">View Results</a>
-                <a id="openRubricModalBtn">Grading Rubric & Help</a>
+                <a id="openRubricModalBtn" style="cursor: pointer;">Grading Rubric & Help</a>
             </div>
+        </div>
         <div class="nav-right-white">
             <a href="../logout.php" class="logout-link">Log out</a>
             <div class="user-avatar"><?= $initial ?></div>
