@@ -38,6 +38,7 @@ $recent = $pdo->query("SELECT s.student_name, s.student_id, a.total_score, u.use
     <meta charset="UTF-8">
     <title>Dashboard - Admin</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background-color: #ffffff; border: 1px solid #e1e1e1; border-radius: 8px; padding: 25px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; display: block; text-decoration: none; color: inherit; cursor: pointer; }
@@ -94,37 +95,37 @@ $recent = $pdo->query("SELECT s.student_name, s.student_id, a.total_score, u.use
 
         <div class="stats-grid">
             <a href="manage_students.php" class="stat-card" title="Go to Manage Students">
-                <div class="stat-icon">&#128218;</div>
+                <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
                 <div class="stat-number"><?= $total_students ?></div>
                 <div class="stat-label">Total Students</div>
                 <div class="stat-hint">Click to manage &rarr;</div>
             </a>
             <a href="manage_users.php" class="stat-card" title="Go to Manage Assessors">
-                <div class="stat-icon">&#128100;</div>
+                <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
                 <div class="stat-number"><?= $total_assessors ?></div>
                 <div class="stat-label">Total Assessors</div>
                 <div class="stat-hint">Click to manage &rarr;</div>
             </a>
             <a href="manage_internships.php" class="stat-card" title="Go to Manage Internships">
-                <div class="stat-icon">&#127970;</div>
+                <div class="stat-icon"><i class="fas fa-building"></i></div>
                 <div class="stat-number"><?= $total_internships ?></div>
                 <div class="stat-label">Internships Assigned</div>
                 <div class="stat-hint">Click to manage &rarr;</div>
             </a>
             <a href="view_all_results.php" class="stat-card green" title="View all evaluation results">
-                <div class="stat-icon">&#9989;</div>
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-number"><?= $total_evaluated ?></div>
                 <div class="stat-label">Evaluated</div>
                 <div class="stat-hint">Click to view results &rarr;</div>
             </a>
             <a href="manage_internships.php" class="stat-card orange" title="View pending internships">
-                <div class="stat-icon">&#8987;</div>
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
                 <div class="stat-number"><?= $total_pending ?></div>
                 <div class="stat-label">Pending</div>
                 <div class="stat-hint">Click to view assignments &rarr;</div>
             </a>
             <a href="view_all_results.php" class="stat-card purple" title="View all evaluation results">
-                <div class="stat-icon">&#127942;</div>
+                <div class="stat-icon"><i class="fas fa-chart-bar"></i></div>
                 <div class="stat-number"><?= $university_avg ?></div>
                 <div class="stat-label">University Average</div>
                 <div class="stat-hint">Click to view results &rarr;</div>
@@ -185,7 +186,7 @@ $recent = $pdo->query("SELECT s.student_name, s.student_id, a.total_score, u.use
                     <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
                     <span style="color: #555; font-size: 14px;">If you encounter unexpected behavior, system crashes, issues with deleting linked records, or need database maintenance, please contact:</span>
                     <div style="margin-top: 8px;">
-                        &#128100; <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
+                        <i class="fas fa-chalkboard-teacher"></i> <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
                         &#9993; <a href="mailto:ChyeCheah.Tan@nottingham.edu.my" class="admin-link">ChyeCheah.Tan@nottingham.edu.my</a>
                     </div>
                 </div>

@@ -101,13 +101,13 @@ The following test accounts are pre-loaded in the SQL file. **You must import th
 ### Admin Account
 | Username | Password |
 |----------|----------|
-| `admin_main` | `hashed_pwd_001` |
+| `admin` | `admin123` |
 
 ### Assessor Accounts
 | Username | Password |
 |----------|----------|
-| `Dr_smith`   | `hashed_pwd_002` |
-| `Prof_jones` | `hashed_pwd_003` |
+| `Dr_smith` | `smith123` |
+| `Prof_jones` | `jones123` |
 
 ---
 

@@ -2,10 +2,10 @@
 -- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- 主机： localhost:8889
--- 生成日期： 2026-04-22 03:13:36
--- 服务器版本： 8.0.44
--- PHP 版本： 8.3.28
+-- Host: localhost
+-- Generated: 2026-04-22 03:13:36
+-- Server version: 8.0.44
+-- PHP version: 8.3.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- 数据库： `COMP1044_CW_DB`
+-- Database: `COMP1044_CW_DB`
 --
 
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Assessments`
+-- Table structure for `Assessments`
 --
 
 CREATE TABLE `Assessments` (
@@ -40,23 +40,23 @@ CREATE TABLE `Assessments` (
   `time_mgmt_score` decimal(5,2) NOT NULL,
   `total_score` decimal(5,2) NOT NULL,
   `qualitative_comments` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Assessments`
+-- Dumping data for table `Assessments`
 --
 
 INSERT INTO `Assessments` (`assessment_id`, `internship_id`, `task_score`, `health_safety_score`, `connectivity_score`, `report_score`, `clarity_score`, `lifelong_score`, `project_mgmt_score`, `time_mgmt_score`, `total_score`, `qualitative_comments`) VALUES
 (1, 1, 9.00, 9.50, 9.00, 14.00, 9.00, 14.00, 14.00, 14.00, 92.50, 'Alice demonstrated outstanding technical skills and adapted perfectly to the company culture. Highly recommended.'),
 (2, 2, 7.00, 8.00, 7.50, 11.00, 7.00, 10.50, 12.00, 11.00, 74.00, 'Bob completed the tasks adequately, but needs to improve his communication skills and time management.'),
 (3, 4, 8.50, 9.00, 8.00, 13.00, 8.50, 12.00, 13.00, 12.50, 84.50, 'Diana is a fast learner and contributed well to the cloud architecture project. Good overall performance.'),
-(4, 5, 55.00, 60.00, 58.00, 62.00, 55.00, 60.00, 58.00, 60.00, 58.50, 'Evan showed basic understanding of data analytics concepts but struggled with independent problem-solving. Improvement needed in time management and project delivery.'),
-(5, 6, 40.00, 45.00, 40.00, 42.00, 40.00, 45.00, 42.00, 45.00, 42.50, 'Frank did not meet the expected standard. Frequent absence, poor engagement with assigned tasks, and weak technical foundation. Requires significant improvement.');
+(4, 5, 5.50, 6.00, 5.80, 6.20, 5.50, 6.00, 5.80, 6.00, 58.50, 'Evan showed basic understanding of data analytics concepts but struggled with independent problem-solving. Improvement needed in time management and project delivery.'),
+(5, 6, 4.00, 4.50, 4.00, 4.20, 4.00, 4.50, 4.20, 4.50, 42.50, 'Frank did not meet the expected standard. Frequent absence, poor engagement with assigned tasks, and weak technical foundation. Requires significant improvement.');
 
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Internships`
+-- Table structure for `Internships`
 --
 
 CREATE TABLE `Internships` (
@@ -65,10 +65,10 @@ CREATE TABLE `Internships` (
   `assessor_id` int NOT NULL,
   `company_name` varchar(150) NOT NULL,
   `other_details` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Internships`
+-- Dumping data for table `Internships`
 --
 
 INSERT INTO `Internships` (`internship_id`, `student_id`, `assessor_id`, `company_name`, `other_details`) VALUES
@@ -82,17 +82,17 @@ INSERT INTO `Internships` (`internship_id`, `student_id`, `assessor_id`, `compan
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Students`
+-- Table structure for `Students`
 --
 
 CREATE TABLE `Students` (
   `student_id` varchar(20) NOT NULL,
   `student_name` varchar(100) NOT NULL,
   `programme` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Students`
+-- Dumping data for table `Students`
 --
 
 INSERT INTO `Students` (`student_id`, `student_name`, `programme`) VALUES
@@ -106,7 +106,7 @@ INSERT INTO `Students` (`student_id`, `student_name`, `programme`) VALUES
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Users`
+-- Table structure for `Users`
 --
 
 CREATE TABLE `Users` (
@@ -114,30 +114,34 @@ CREATE TABLE `Users` (
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('Admin','Assessor') NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Users`
+-- Dumping data for table `Users`
+-- Test Accounts (Plaintext Passwords for Reference)
+-- admin       -> admin123
+-- Dr_smith    -> smith123
+-- Prof_jones  -> jones123
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password`, `role`) VALUES
-(1, 'admin_main', 'hashed_pwd_001', 'Admin'),
-(2, 'Dr_smith', 'hashed_pwd_002', 'Assessor'),
-(3, 'Prof_jones', 'hashed_pwd_003', 'Assessor');
+(1, 'admin', '$2y$12$SDdiBj6qgTVtU7KKhi/mROuIxtW6ZjBY5IcuTBQRrqs0mX5pRWo7u', 'Admin'),
+(2, 'Dr_smith', '$2y$12$n.Td7esO2fVYH9yTTWMmeeKm0nnaQxW3ZLzYd7IA6nK/DSggiJDly', 'Assessor'),
+(3, 'Prof_jones', '$2y$12$1udppAvrOXxZwKb5LYui2ewOvpkMXIyNGiWhCyUWOBWVtZDtZEKCi', 'Assessor');
 
 --
--- 转储表的索引
+-- Indexes for dumped tables
 --
 
 --
--- 表的索引 `Assessments`
+-- Indexes for table `Assessments`
 --
 ALTER TABLE `Assessments`
   ADD PRIMARY KEY (`assessment_id`),
   ADD UNIQUE KEY `internship_id` (`internship_id`);
 
 --
--- 表的索引 `Internships`
+-- Indexes for table `Internships`
 --
 ALTER TABLE `Internships`
   ADD PRIMARY KEY (`internship_id`),
@@ -145,52 +149,52 @@ ALTER TABLE `Internships`
   ADD KEY `assessor_id` (`assessor_id`);
 
 --
--- 表的索引 `Students`
+-- Indexes for table `Students`
 --
 ALTER TABLE `Students`
   ADD PRIMARY KEY (`student_id`);
 
 --
--- 表的索引 `Users`
+-- Indexes for table `Users`
 --
 ALTER TABLE `Users`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `username` (`username`);
 
 --
--- 在导出的表使用AUTO_INCREMENT
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- 使用表AUTO_INCREMENT `Assessments`
+-- AUTO_INCREMENT for table `Assessments`
 --
 ALTER TABLE `Assessments`
   MODIFY `assessment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- 使用表AUTO_INCREMENT `Internships`
+-- AUTO_INCREMENT for table `Internships`
 --
 ALTER TABLE `Internships`
   MODIFY `internship_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- 使用表AUTO_INCREMENT `Users`
+-- AUTO_INCREMENT for table `Users`
 --
 ALTER TABLE `Users`
   MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- 限制导出的表
+-- Constraints for dumped tables
 --
 
 --
--- 限制表 `Assessments`
+-- Constraints for table `Assessments`
 --
 ALTER TABLE `Assessments`
   ADD CONSTRAINT `assessments_ibfk_1` FOREIGN KEY (`internship_id`) REFERENCES `Internships` (`internship_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- 限制表 `Internships`
+-- Constraints for table `Internships`
 --
 ALTER TABLE `Internships`
   ADD CONSTRAINT `internships_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE,
