@@ -17,10 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_user'])) {
     $new_username = $_POST['username'];
     $new_password = $_POST['password']; 
     try {
-        // Hash the password before storing (never store plain text passwords)
-        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("INSERT INTO Users (username, password, role) VALUES (:user, :pass, 'Assessor')");
-        $stmt->execute(['user' => $new_username, 'pass' => $hashed_password]);
+        $stmt->execute(['user' => $new_username, 'pass' => $new_password]);
         $success_msg = "Assessor added successfully!";
     } catch (PDOException $e) {
         $error_msg = "Error: Username might already exist.";

@@ -49,7 +49,6 @@ if (isset($_GET['delete_id'])) {
     try {
         $stmt = $pdo->prepare("DELETE FROM Students WHERE student_id = :id");
         $stmt->execute(['id' => $_GET['delete_id']]);
-        // Redirect only on success to show a clean URL and avoid re-delete on refresh
         header("Location: manage_students.php?deleted=1"); 
         exit();
     } catch (PDOException $e) {
@@ -62,7 +61,17 @@ if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
     $success_msg = "Student deleted successfully!";
 }
 
-$stmt = $pdo->query("SELECT * FROM Students ORDER BY student_id ASC");
+// Fetch all unique programmes for the filter dropdown
+$programmes = $pdo->query("SELECT DISTINCT programme FROM Students ORDER BY programme ASC")->fetchAll(PDO::FETCH_COLUMN);
+
+// Apply programme filter if one is selected via URL query
+$filter_programme = isset($_GET['programme']) ? trim($_GET['programme']) : '';
+if ($filter_programme !== '') {
+    $stmt = $pdo->prepare("SELECT * FROM Students WHERE programme = :prog ORDER BY student_id ASC");
+    $stmt->execute(['prog' => $filter_programme]);
+} else {
+    $stmt = $pdo->query("SELECT * FROM Students ORDER BY student_id ASC");
+}
 $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -133,6 +142,22 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <input type="text" id="programme" name="programme" class="moodle-form-input" placeholder="Programme" required>
                     <button type="submit" name="add_student" class="moodle-btn-submit">+ Add Student</button>
                 </form>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                <label style="font-weight:bold; color:#1d2125; font-size:14px;">Filter by Programme:</label>
+                <form method="GET" action="manage_students.php" style="display:flex; gap:10px; align-items:center; flex-grow:1;">
+                    <select name="programme" class="moodle-form-input" style="width:auto; margin-right:0; min-width:250px;" onchange="this.form.submit()">
+                        <option value="">-- All Programmes --</option>
+                        <?php foreach ($programmes as $prog): ?>
+                            <option value="<?= htmlspecialchars($prog) ?>" <?= $filter_programme === $prog ? 'selected' : '' ?>><?= htmlspecialchars($prog) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php if ($filter_programme !== ''): ?>
+                        <a href="manage_students.php" class="btn-action btn-edit" style="padding:10px 15px;">Clear Filter</a>
+                    <?php endif; ?>
+                </form>
+                <span style="color:#6c757d; font-size:13px;">Showing <?= count($students) ?> student(s)</span>
             </div>
 
             <div class="table-responsive">
