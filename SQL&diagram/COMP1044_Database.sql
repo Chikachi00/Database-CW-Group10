@@ -1,92 +1,202 @@
--- create table
-CREATE TABLE Users(
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,    
-    password VARCHAR(255) NOT NULL,          
-    role ENUM('Admin', 'Assessor') NOT NULL
-);
+-- phpMyAdmin SQL Dump
+-- version 5.2.3
+-- https://www.phpmyadmin.net/
+--
+-- 主机： localhost:8889
+-- 生成日期： 2026-04-22 03:13:36
+-- 服务器版本： 8.0.44
+-- PHP 版本： 8.3.28
 
-CREATE TABLE Students (
-    student_id VARCHAR(20) PRIMARY KEY,      
-    student_name VARCHAR(100) NOT NULL,      
-    programme VARCHAR(100) NOT NULL          
-);
-
-CREATE TABLE Internships (
-    internship_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id VARCHAR(20) NOT NULL,
-    assessor_id INT NOT NULL,
-    company_name VARCHAR(150) NOT NULL,      
-    other_details TEXT,                      
-    FOREIGN KEY (student_id) REFERENCES Students(student_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (assessor_id) REFERENCES Users(user_id) ON DELETE RESTRICT ON UPDATE CASCADE
-);
-
--- DECIMAL(5,2),tow decimal places for scores
-CREATE TABLE Assessments (
-    assessment_id INT AUTO_INCREMENT PRIMARY KEY,
-    internship_id INT NOT NULL UNIQUE,       
-    task_score DECIMAL(5,2) NOT NULL,             
-    health_safety_score DECIMAL(5,2) NOT NULL, 
-    connectivity_score DECIMAL(5,2) NOT NULL,
-    report_score DECIMAL(5,2) NOT NULL,      
-    clarity_score DECIMAL(5,2) NOT NULL,     
-    lifelong_score DECIMAL(5,2) NOT NULL,    
-    project_mgmt_score DECIMAL(5,2) NOT NULL,
-    time_mgmt_score DECIMAL(5,2) NOT NULL,   
-    total_score DECIMAL(5,2) NOT NULL,       
-    qualitative_comments TEXT NOT NULL,      
-    FOREIGN KEY (internship_id) REFERENCES Internships(internship_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
 
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- insert value
--- 1. Insert user data (1 administrator, 2 evaluators)
--- At this point, the auto-increment primary key user_id is automatically assigned: Admin=1, Dr.Smith=2, Prof.Jones=3
-INSERT INTO Users (username, password, role) 
-VALUES 
-('admin_main', 'hashed_pwd_001', 'Admin'),
-('Dr_smith', 'hashed_pwd_002', 'Assessor'),
-('Prof_jones', 'hashed_pwd_003', 'Assessor');
+--
+-- 数据库： `COMP1044_CW_DB`
+--
 
--- 2.insert students values (5 records)
-INSERT INTO Students (student_id, student_name, programme) 
-VALUES 
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `Assessments`
+--
+
+CREATE TABLE `Assessments` (
+  `assessment_id` int NOT NULL,
+  `internship_id` int NOT NULL,
+  `task_score` decimal(5,2) NOT NULL,
+  `health_safety_score` decimal(5,2) NOT NULL,
+  `connectivity_score` decimal(5,2) NOT NULL,
+  `report_score` decimal(5,2) NOT NULL,
+  `clarity_score` decimal(5,2) NOT NULL,
+  `lifelong_score` decimal(5,2) NOT NULL,
+  `project_mgmt_score` decimal(5,2) NOT NULL,
+  `time_mgmt_score` decimal(5,2) NOT NULL,
+  `total_score` decimal(5,2) NOT NULL,
+  `qualitative_comments` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- 转存表中的数据 `Assessments`
+--
+
+INSERT INTO `Assessments` (`assessment_id`, `internship_id`, `task_score`, `health_safety_score`, `connectivity_score`, `report_score`, `clarity_score`, `lifelong_score`, `project_mgmt_score`, `time_mgmt_score`, `total_score`, `qualitative_comments`) VALUES
+(1, 1, 9.00, 9.50, 9.00, 14.00, 9.00, 14.00, 14.00, 14.00, 92.50, 'Alice demonstrated outstanding technical skills and adapted perfectly to the company culture. Highly recommended.'),
+(2, 2, 7.00, 8.00, 7.50, 11.00, 7.00, 10.50, 12.00, 11.00, 74.00, 'Bob completed the tasks adequately, but needs to improve his communication skills and time management.'),
+(3, 4, 8.50, 9.00, 8.00, 13.00, 8.50, 12.00, 13.00, 12.50, 84.50, 'Diana is a fast learner and contributed well to the cloud architecture project. Good overall performance.'),
+(4, 5, 55.00, 60.00, 58.00, 62.00, 55.00, 60.00, 58.00, 60.00, 58.50, 'Evan showed basic understanding of data analytics concepts but struggled with independent problem-solving. Improvement needed in time management and project delivery.'),
+(5, 6, 40.00, 45.00, 40.00, 42.00, 40.00, 45.00, 42.00, 45.00, 42.50, 'Frank did not meet the expected standard. Frequent absence, poor engagement with assigned tasks, and weak technical foundation. Requires significant improvement.');
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `Internships`
+--
+
+CREATE TABLE `Internships` (
+  `internship_id` int NOT NULL,
+  `student_id` varchar(20) NOT NULL,
+  `assessor_id` int NOT NULL,
+  `company_name` varchar(150) NOT NULL,
+  `other_details` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- 转存表中的数据 `Internships`
+--
+
+INSERT INTO `Internships` (`internship_id`, `student_id`, `assessor_id`, `company_name`, `other_details`) VALUES
+(1, 'S2024001', 2, 'Google Malaysia', 'Backend Intern, 12 weeks'),
+(2, 'S2024002', 2, 'Shopee', 'Frontend Intern, 12 weeks'),
+(3, 'S2024003', 2, 'Intel', 'System Analyst Intern, 10 weeks'),
+(4, 'S2024004', 3, 'Microsoft', 'Cloud Architect Intern, 12 weeks'),
+(5, 'S2024005', 3, 'Grab', 'Data Analyst Intern, 10 weeks'),
+(6, 'S2024006', 2, 'Small Local Startup', 'Junior Developer Intern, 8 weeks');
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `Students`
+--
+
+CREATE TABLE `Students` (
+  `student_id` varchar(20) NOT NULL,
+  `student_name` varchar(100) NOT NULL,
+  `programme` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- 转存表中的数据 `Students`
+--
+
+INSERT INTO `Students` (`student_id`, `student_name`, `programme`) VALUES
 ('S2024001', 'Alice Wong', 'Computer Science'),
 ('S2024002', 'Bob Chen', 'Software Engineering'),
 ('S2024003', 'Charlie Davis', 'Information Technology'),
 ('S2024004', 'Diana Lim', 'Computer Science'),
-('S2024005', 'Evan Taylor', 'Data Science');
+('S2024005', 'Evan Taylor', 'Data Science'),
+('S2024006', 'Frank Wilson', 'Software Engineering');
 
--- 3. Insert internship assignment data (5 records)
--- Assign Alice, Bob, Charlie to Dr. Smith (assessor_id = 2)
--- Assign Diana, Evan to Prof. Jones (assessor_id = 3)
--- At this point, the auto-increment primary key internship_id will be automatically assigned from 1 to 5
-INSERT INTO Internships (student_id, assessor_id, company_name, other_details) 
-VALUES 
-('S2024001', 2, 'Google Malaysia', 'Backend Intern, 12 weeks'),
-('S2024002', 2, 'Shopee', 'Frontend Intern, 12 weeks'),
-('S2024003', 2, 'Intel', 'System Analyst Intern, 10 weeks'),
-('S2024004', 3, 'Microsoft', 'Cloud Architect Intern, 12 weeks'),
-('S2024005', 3, 'Grab', 'Data Analyst Intern, 10 weeks');
+-- --------------------------------------------------------
 
--- 4. Insert evaluation score data (insert only 3 records, leaving 2 empty)
--- Corresponding to internship_id 1 (Alice), 2 (Bob), 4 (Diana)
--- leaving internship_id 3 (Charlie) and 5 (Evan) ungraded for use in video demonstrations
+--
+-- 表的结构 `Users`
+--
 
-INSERT INTO Assessments (
-    internship_id, task_score, health_safety_score, connectivity_score, 
-    report_score, clarity_score, lifelong_score, project_mgmt_score, 
-    time_mgmt_score, total_score, qualitative_comments
-) 
+CREATE TABLE `Users` (
+  `user_id` int NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('Admin','Assessor') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-VALUES 
--- Alice score (total 92.5) - excellent
-(1, 9.0, 9.5, 9.0, 14.0, 9.0, 14.0, 14.0, 14.0, 92.5, 'Alice demonstrated outstanding technical skills and adapted perfectly to the company culture. Highly recommended.'),
+--
+-- 转存表中的数据 `Users`
+--
 
--- Bob score (total 74.0) - satisfactory
-(2, 7.0, 8.0, 7.5, 11.0, 7.0, 10.5, 12.0, 11.0, 74.0, 'Bob completed the tasks adequately, but needs to improve his communication skills and time management.'),
+INSERT INTO `Users` (`user_id`, `username`, `password`, `role`) VALUES
+(1, 'admin_main', 'hashed_pwd_001', 'Admin'),
+(2, 'Dr_smith', 'hashed_pwd_002', 'Assessor'),
+(3, 'Prof_jones', 'hashed_pwd_003', 'Assessor');
 
--- Diana score (total 84.5) - good
-(4, 8.5, 9.0, 8.0, 13.0, 8.5, 12.0, 13.0, 12.5, 84.5, 'Diana is a fast learner and contributed well to the cloud architecture project. Good overall performance.');
+--
+-- 转储表的索引
+--
+
+--
+-- 表的索引 `Assessments`
+--
+ALTER TABLE `Assessments`
+  ADD PRIMARY KEY (`assessment_id`),
+  ADD UNIQUE KEY `internship_id` (`internship_id`);
+
+--
+-- 表的索引 `Internships`
+--
+ALTER TABLE `Internships`
+  ADD PRIMARY KEY (`internship_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `assessor_id` (`assessor_id`);
+
+--
+-- 表的索引 `Students`
+--
+ALTER TABLE `Students`
+  ADD PRIMARY KEY (`student_id`);
+
+--
+-- 表的索引 `Users`
+--
+ALTER TABLE `Users`
+  ADD PRIMARY KEY (`user_id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- 在导出的表使用AUTO_INCREMENT
+--
+
+--
+-- 使用表AUTO_INCREMENT `Assessments`
+--
+ALTER TABLE `Assessments`
+  MODIFY `assessment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- 使用表AUTO_INCREMENT `Internships`
+--
+ALTER TABLE `Internships`
+  MODIFY `internship_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- 使用表AUTO_INCREMENT `Users`
+--
+ALTER TABLE `Users`
+  MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- 限制导出的表
+--
+
+--
+-- 限制表 `Assessments`
+--
+ALTER TABLE `Assessments`
+  ADD CONSTRAINT `assessments_ibfk_1` FOREIGN KEY (`internship_id`) REFERENCES `Internships` (`internship_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- 限制表 `Internships`
+--
+ALTER TABLE `Internships`
+  ADD CONSTRAINT `internships_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `internships_ibfk_2` FOREIGN KEY (`assessor_id`) REFERENCES `Users` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
