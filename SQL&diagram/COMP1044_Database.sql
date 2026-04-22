@@ -2,10 +2,10 @@
 -- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- 主机： localhost:8889
--- 生成日期： 2026-04-22 03:13:36
--- 服务器版本： 8.0.44
--- PHP 版本： 8.3.28
+-- Host: localhost
+-- Generated: 2026-04-22 03:13:36
+-- Server version: 8.0.44
+-- PHP version: 8.3.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- 数据库： `COMP1044_CW_DB`
+-- Database: `COMP1044_CW_DB`
 --
 
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Assessments`
+-- Table structure for `Assessments`
 --
 
 CREATE TABLE `Assessments` (
@@ -43,7 +43,7 @@ CREATE TABLE `Assessments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Assessments`
+-- Dumping data for table `Assessments`
 --
 
 INSERT INTO `Assessments` (`assessment_id`, `internship_id`, `task_score`, `health_safety_score`, `connectivity_score`, `report_score`, `clarity_score`, `lifelong_score`, `project_mgmt_score`, `time_mgmt_score`, `total_score`, `qualitative_comments`) VALUES
@@ -56,7 +56,7 @@ INSERT INTO `Assessments` (`assessment_id`, `internship_id`, `task_score`, `heal
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Internships`
+-- Table structure for `Internships`
 --
 
 CREATE TABLE `Internships` (
@@ -68,7 +68,7 @@ CREATE TABLE `Internships` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Internships`
+-- Dumping data for table `Internships`
 --
 
 INSERT INTO `Internships` (`internship_id`, `student_id`, `assessor_id`, `company_name`, `other_details`) VALUES
@@ -82,7 +82,7 @@ INSERT INTO `Internships` (`internship_id`, `student_id`, `assessor_id`, `compan
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Students`
+-- Table structure for `Students`
 --
 
 CREATE TABLE `Students` (
@@ -92,7 +92,7 @@ CREATE TABLE `Students` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Students`
+-- Dumping data for table `Students`
 --
 
 INSERT INTO `Students` (`student_id`, `student_name`, `programme`) VALUES
@@ -106,7 +106,7 @@ INSERT INTO `Students` (`student_id`, `student_name`, `programme`) VALUES
 -- --------------------------------------------------------
 
 --
--- 表的结构 `Users`
+-- Table structure for `Users`
 --
 
 CREATE TABLE `Users` (
@@ -117,27 +117,31 @@ CREATE TABLE `Users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- 转存表中的数据 `Users`
+-- Dumping data for table `Users`
+-- Test Accounts (Plaintext Passwords for Reference)
+-- admin       -> admin123
+-- Dr_smith    -> smith123
+-- Prof_jones  -> jones123
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password`, `role`) VALUES
-(1, 'admin_main', 'hashed_pwd_001', 'Admin'),
-(2, 'Dr_smith', 'hashed_pwd_002', 'Assessor'),
-(3, 'Prof_jones', 'hashed_pwd_003', 'Assessor');
+(1, 'admin', '$2y$12$SDdiBj6qgTVtU7KKhi/mROuIxtW6ZjBY5IcuTBQRrqs0mX5pRWo7u', 'Admin'),
+(2, 'Dr_smith', '$2y$12$n.Td7esO2fVYH9yTTWMmeeKm0nnaQxW3ZLzYd7IA6nK/DSggiJDly', 'Assessor'),
+(3, 'Prof_jones', '$2y$12$1udppAvrOXxZwKb5LYui2ewOvpkMXIyNGiWhCyUWOBWVtZDtZEKCi', 'Assessor');
 
 --
--- 转储表的索引
+-- Indexes for dumped tables
 --
 
 --
--- 表的索引 `Assessments`
+-- Indexes for table `Assessments`
 --
 ALTER TABLE `Assessments`
   ADD PRIMARY KEY (`assessment_id`),
   ADD UNIQUE KEY `internship_id` (`internship_id`);
 
 --
--- 表的索引 `Internships`
+-- Indexes for table `Internships`
 --
 ALTER TABLE `Internships`
   ADD PRIMARY KEY (`internship_id`),
@@ -145,52 +149,52 @@ ALTER TABLE `Internships`
   ADD KEY `assessor_id` (`assessor_id`);
 
 --
--- 表的索引 `Students`
+-- Indexes for table `Students`
 --
 ALTER TABLE `Students`
   ADD PRIMARY KEY (`student_id`);
 
 --
--- 表的索引 `Users`
+-- Indexes for table `Users`
 --
 ALTER TABLE `Users`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `username` (`username`);
 
 --
--- 在导出的表使用AUTO_INCREMENT
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- 使用表AUTO_INCREMENT `Assessments`
+-- AUTO_INCREMENT for table `Assessments`
 --
 ALTER TABLE `Assessments`
   MODIFY `assessment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- 使用表AUTO_INCREMENT `Internships`
+-- AUTO_INCREMENT for table `Internships`
 --
 ALTER TABLE `Internships`
   MODIFY `internship_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- 使用表AUTO_INCREMENT `Users`
+-- AUTO_INCREMENT for table `Users`
 --
 ALTER TABLE `Users`
   MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- 限制导出的表
+-- Constraints for dumped tables
 --
 
 --
--- 限制表 `Assessments`
+-- Constraints for table `Assessments`
 --
 ALTER TABLE `Assessments`
   ADD CONSTRAINT `assessments_ibfk_1` FOREIGN KEY (`internship_id`) REFERENCES `Internships` (`internship_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- 限制表 `Internships`
+-- Constraints for table `Internships`
 --
 ALTER TABLE `Internships`
   ADD CONSTRAINT `internships_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE,
