@@ -110,6 +110,21 @@ if ($total_students_evaluated > 0) {
     foreach ($evaluated_students as $student) { $sum += $student['total_score']; }
     $average_score = round($sum / $total_students_evaluated, 2);
 }
+
+// Count pending evaluations for the navbar badge
+$sql_pending_count = "SELECT COUNT(*) FROM Internships i
+                      LEFT JOIN Assessments a ON i.internship_id = a.internship_id
+                      WHERE i.assessor_id = :assessor_id AND a.assessment_id IS NULL";
+$stmt_pending_count = $pdo->prepare($sql_pending_count);
+$stmt_pending_count->execute(['assessor_id' => $assessor_id]);
+$pending_count = $stmt_pending_count->fetchColumn();
+
+// Helper: return CSS class based on score grade band
+function getScoreBadgeClass($score) {
+    if ($score >= 70) return 'score-merit';
+    if ($score >= 50) return 'score-pass';
+    return 'score-fail';
+}
 ?>
 
 <!DOCTYPE html>
@@ -173,6 +188,12 @@ if ($total_students_evaluated > 0) {
         
         .detail-raw-score { font-size: 16px; color: #10263b; }
         
+        /* Score grade badges */
+        .score-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px; min-width: 60px; text-align: center; }
+        .score-merit { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        .score-pass  { background-color: #cfe2ff; color: #084298; border: 1px solid #b6d4fe; }
+        .score-fail  { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        
         /* Logout Link */
         .logout-link { 
             color: #555; 
@@ -192,7 +213,12 @@ if ($total_students_evaluated > 0) {
         <div class="nav-left-white">
             <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
-                <a href="evaluate_student.php">Evaluate</a>
+                <a href="evaluate_student.php">
+                    Evaluate
+                    <?php if ($pending_count > 0): ?>
+                        <span style="background-color:#dc3545; color:white; border-radius:10px; padding:2px 8px; font-size:11px; margin-left:6px; font-weight:bold;"><?= $pending_count ?></span>
+                    <?php endif; ?>
+                </a>
                 <a href="submit_marks.php" class="active-link">View Results</a>
                 <a id="openRubricModalBtn">Grading Rubric & Help</a>
             </div>
@@ -271,7 +297,7 @@ if ($total_students_evaluated > 0) {
                                     <td><?= number_format($row['lifelong_score'] * 0.15, 2) ?></td>
                                     <td><?= number_format($row['project_mgmt_score'] * 0.15, 2) ?></td>
                                     <td><?= number_format($row['time_mgmt_score'] * 0.15, 2) ?></td>
-                                    <td><strong style="color:#7a327e; font-size: 15px;"><?= number_format($row['total_score'], 2) ?></strong></td>
+                                    <td><span class="score-badge <?= getScoreBadgeClass($row['total_score']) ?>"><?= number_format($row['total_score'], 2) ?></span></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -290,7 +316,7 @@ if ($total_students_evaluated > 0) {
             <div class="moodle-modal-body">
                 <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #dee2e6; padding-bottom: 15px; margin-bottom: 20px;">
                     <div style="font-size: 16px;"><strong>Student ID:</strong> <span id="detailId"></span></div>
-                    <div style="font-size: 16px;"><strong>Final Weighted Score:</strong> <span id="detailTotal" style="color: #7a327e; font-size: 22px; font-weight: bold;"></span> / 100</div>
+                    <div style="font-size: 16px;"><strong>Final Weighted Score:</strong> <span id="detailTotal" class="score-badge" style="font-size: 18px; padding: 6px 16px;"></span> / 100</div>
                 </div>
                 
                 <h4 style="margin-top: 0; color: #10263b;">Raw Component Scores (Out of 100)</h4>
@@ -375,7 +401,13 @@ if ($total_students_evaluated > 0) {
             row.addEventListener('dblclick', function() {
                 document.getElementById('detailStudentName').innerText = this.getAttribute('data-name');
                 document.getElementById('detailId').innerText = this.getAttribute('data-id');
-                document.getElementById('detailTotal').innerText = this.getAttribute('data-total');
+                const totalScore = parseFloat(this.getAttribute('data-total'));
+                const totalEl = document.getElementById('detailTotal');
+                totalEl.innerText = this.getAttribute('data-total');
+                totalEl.classList.remove('score-merit', 'score-pass', 'score-fail');
+                if (totalScore >= 70) totalEl.classList.add('score-merit');
+                else if (totalScore >= 50) totalEl.classList.add('score-pass');
+                else totalEl.classList.add('score-fail');
                 
                 document.getElementById('detTask').innerText = this.getAttribute('data-task');
                 document.getElementById('detHealth').innerText = this.getAttribute('data-health');

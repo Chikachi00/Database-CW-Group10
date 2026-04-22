@@ -92,14 +92,16 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
     <nav class="moodle-navbar-white">
-        <div class="nav-left-white">
-            <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
-                <a href="evaluate_student.php" class="active-link">Evaluate</a>
+                <a href="evaluate_student.php" class="active-link">
+                    Evaluate
+                    <?php if (count($pending_students) > 0): ?>
+                        <span style="background-color:#dc3545; color:white; border-radius:10px; padding:2px 8px; font-size:11px; margin-left:6px; font-weight:bold;"><?= count($pending_students) ?></span>
+                    <?php endif; ?>
+                </a>
                 <a href="submit_marks.php">View Results</a>
                 <a id="openRubricModalBtn">Grading Rubric & Help</a>
             </div>
-        </div>
         <div class="nav-right-white">
             <a href="../logout.php" class="logout-link">Log out</a>
             <div class="user-avatar"><?= $initial ?></div>
