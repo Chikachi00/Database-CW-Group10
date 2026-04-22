@@ -30,6 +30,7 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>Evaluate Student - Assessor View</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #f8f9fa; color: #1d2125; font-family: Arial, Helvetica, sans-serif; margin: 0; padding-top: 80px; }
         .moodle-navbar-white { background-color: #ffffff; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; height: 70px; border-bottom: 1px solid #dee2e6; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
@@ -54,7 +55,6 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 12px 35px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 25px; font-weight: bold; }
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
 
-
         .autocomplete-wrapper { position: relative; width: 100%; }
         .dropdown-caret { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 12px; pointer-events: none; }
         #student_search { padding-right: 35px; cursor: pointer; }
@@ -64,8 +64,8 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .custom-dropdown-item:last-child { border-bottom: none; }
         .highlight-match { background-color: #ffeb3b; color: #1d2125; font-weight: bold; border-radius: 2px; padding: 0 2px; }
 
-        /* Modal Styles */
-        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
+        /* Shared Modal Styles - 增加了 backdrop-filter: blur(3px); */
+        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
         .moodle-modal-header h2 { margin: 0; font-size: 20px; color: #10263b; }
@@ -76,17 +76,8 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
         
-        /* Logout Link */
-        .logout-link { 
-            color: #555; 
-            text-decoration: none; 
-            font-size: 14px; 
-            transition: all 0.2s ease; 
-        }
-        .logout-link:hover { 
-            color: #842029; 
-            text-decoration: underline; 
-        }
+        .logout-link { color: #555; text-decoration: none; font-size: 14px; transition: all 0.2s ease; }
+        .logout-link:hover { color: #842029; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -95,12 +86,8 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         <div class="nav-left-white">
             <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
-                <a href="evaluate_student.php" class="active-link">
-                    Evaluate
-                    <?php if (count($pending_students) > 0): ?>
-                        <span style="background-color:#dc3545; color:white; border-radius:10px; padding:2px 8px; font-size:11px; margin-left:6px; font-weight:bold;"><?= count($pending_students) ?></span>
-                    <?php endif; ?>
-                </a>
+                <a href="assessor_dashboard.php">Dashboard</a>
+                <a href="evaluate_student.php" class="active-link">Evaluate</a>
                 <a href="submit_marks.php">View Results</a>
                 <a id="openRubricModalBtn" style="cursor: pointer;">Grading Rubric & Help</a>
             </div>
@@ -132,14 +119,14 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
                     </div>
 
                     <div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Undertaking Tasks/Projects (Max 100):</label><input type="number" id="task_score" name="task_score" min="0" max="100" step="1" class="score-input" required></div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Health and Safety Requirements at the Workplace (Max 100):</label><input type="number" id="health_safety_score" name="health_safety_score" min="0" max="100" step="1" class="score-input" required></div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Connectivity and Use of Theoretical Knowledge (Max 100):</label><input type="number" id="connectivity_score" name="connectivity_score" min="0" max="100" step="1" class="score-input" required></div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Presentation of the Report as a Written Document (Max 100):</label><input type="number" id="report_score" name="report_score" min="0" max="100" step="1" class="score-input" required></div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Clarity of Language and Illustration (Max 100):</label><input type="number" id="clarity_score" name="clarity_score" min="0" max="100" step="1" class="score-input" required></div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Lifelong Learning Activities (Max 100):</label><input type="number" id="lifelong_score" name="lifelong_score" min="0" max="100" step="1" class="score-input" required></div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Project Management (Max 100):</label><input type="number" id="project_mgmt_score" name="project_mgmt_score" min="0" max="100" step="1" class="score-input" required></div>
-                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Time Management (Max 100):</label><input type="number" id="time_mgmt_score" name="time_mgmt_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Undertaking Tasks/Projects <span style="color:#7a327e; font-weight:normal;">(10%)</span> (Max 100):</label><input type="number" id="task_score" name="task_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Health and Safety Requirements at the Workplace <span style="color:#7a327e; font-weight:normal;">(10%)</span> (Max 100):</label><input type="number" id="health_safety_score" name="health_safety_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Connectivity and Use of Theoretical Knowledge <span style="color:#7a327e; font-weight:normal;">(10%)</span> (Max 100):</label><input type="number" id="connectivity_score" name="connectivity_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Presentation of the Report as a Written Document <span style="color:#7a327e; font-weight:normal;">(15%)</span> (Max 100):</label><input type="number" id="report_score" name="report_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Clarity of Language and Illustration <span style="color:#7a327e; font-weight:normal;">(10%)</span> (Max 100):</label><input type="number" id="clarity_score" name="clarity_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Lifelong Learning Activities <span style="color:#7a327e; font-weight:normal;">(15%)</span> (Max 100):</label><input type="number" id="lifelong_score" name="lifelong_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Project Management <span style="color:#7a327e; font-weight:normal;">(15%)</span> (Max 100):</label><input type="number" id="project_mgmt_score" name="project_mgmt_score" min="0" max="100" step="1" class="score-input" required></div>
+                        <div style="margin-bottom:15px;"><label class="moodle-form-label">Time Management <span style="color:#7a327e; font-weight:normal;">(15%)</span> (Max 100):</label><input type="number" id="time_mgmt_score" name="time_mgmt_score" min="0" max="100" step="1" class="score-input" required></div>
                     </div>
                     
                     <label class="moodle-form-label" style="margin-top:25px;">Qualitative Comments:</label>
@@ -174,58 +161,9 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <div id="rubricModal" class="moodle-modal-overlay">
-        <div class="moodle-modal-box">
-            <div class="moodle-modal-header">
-                <h2>Grading Rubric & Help</h2>
-                <span class="moodle-close-x" id="closeRubricModalX">&times;</span>
-            </div>
-            <div class="moodle-modal-body">
-                <div style="background-color: #e8f0fe; border-left: 4px solid #10263b; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
-                    <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
-                    <span style="color: #555; font-size: 14px;">If you made an error in grading, require score adjustments after submission, or encounter any system issues, please contact our Database Administrator:</span>
-                    <div style="margin-top: 8px;">
-                        &#128100; <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
-                        &#9993; <a href="mailto:ChyeCheah.Tan@nottingham.edu.my" class="admin-link">ChyeCheah.Tan@nottingham.edu.my</a>
-                    </div>
-                </div>
-
-                <p><strong>Assessment Guidelines:</strong></p>
-                <p style="color: #555; margin-bottom: 15px;">Assessors must evaluate students using the predefined criteria. Please enter the <strong>Raw Marks (0-100)</strong> for each component. The system will automatically calculate the final score based on these strict weightages:</p>
-                
-                <div style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 20px;">
-                    <ul style="column-count: 2; column-gap: 20px; margin: 0; padding-left: 20px; color: #333;">
-                        <li style="margin-bottom: 8px;">Tasks/Projects: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Health & Safety: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Connectivity/Theory: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Report Presentation: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Clarity of Language: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Lifelong Learning: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Project Management: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Time Management: <strong>15%</strong></li>
-                    </ul>
-                </div>
-
-                <p style="color: #842029; background-color: #f8d7da; padding: 12px; border-radius: 4px; font-size: 14px; border: 1px solid #f5c2c7; margin: 0;">
-                    <strong>Mandatory Requirement:</strong> You must provide qualitative comments to justify the scores given. Weightages are fixed and cannot be modified.
-                </p>
-            </div>
-            <div class="moodle-modal-footer">
-                <button id="closeRubricModalBtn" class="moodle-btn-submit" style="margin-top:0; padding: 8px 20px;">Close</button>
-            </div>
-        </div>
-    </div>
+    <?php include 'assessor_help_modal.php'; ?>
 
     <script>
-        // Modal 
-        var modal = document.getElementById("rubricModal");
-        var btn = document.getElementById("openRubricModalBtn");
-        var span = document.getElementById("closeRubricModalX");
-        var closeBtn = document.getElementById("closeRubricModalBtn");
-        btn.onclick = function() { modal.style.display = "flex"; }
-        span.onclick = function() { modal.style.display = "none"; }
-        closeBtn.onclick = function() { modal.style.display = "none"; }
-        
         // Confirm submission modal logic
         var confirmModal = document.getElementById("confirmSubmitModal");
         var closeConfirmX = document.getElementById("closeConfirmX");
@@ -247,12 +185,12 @@ $pending_students = $stmt_pending->fetchAll(PDO::FETCH_ASSOC);
         
         closeConfirmX.onclick = function() { confirmModal.style.display = "none"; }
         cancelSubmitBtn.onclick = function() { confirmModal.style.display = "none"; }
-        
         finalSubmitBtn.onclick = function() { evalForm.submit(); }
 
         window.onclick = function(event) { 
-            if (event.target == modal) modal.style.display = "none"; 
-            if (event.target == confirmModal) confirmModal.style.display = "none"; 
+            if (event.target == confirmModal) {
+                confirmModal.style.display = "none"; 
+            }
         }
 
         // Custom dropdown

@@ -22,34 +22,35 @@ $sql = "SELECT s.student_id, s.student_name, s.programme, u.username as assessor
 $stmt = $pdo->query($sql);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Send HTTP headers for CSV download
+// Send HTTP headers to force file download
 $filename = "internship_results_" . date('Y-m-d') . ".csv";
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 
-$output = fopen('php://output', 'w');
+// Print the CSV column headers using standard echo
+echo "Student ID,Student Name,Programme,Assessor,Company,Tasks (10%),Health & Safety (10%),Theory (10%),Report (15%),Clarity (10%),Lifelong (15%),Proj Mgmt (15%),Time Mgmt (15%),Final Weighted Score,Qualitative Comments\n";
 
-// UTF-8 BOM for Excel compatibility (so Chinese/special chars display correctly)
-fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-
-// CSV headers
-fputcsv($output, [
-    'Student ID', 'Student Name', 'Programme', 'Assessor', 'Company',
-    'Tasks (10%)', 'Health & Safety (10%)', 'Theory (10%)', 'Report (15%)',
-    'Clarity (10%)', 'Lifelong (15%)', 'Proj Mgmt (15%)', 'Time Mgmt (15%)',
-    'Final Weighted Score', 'Qualitative Comments'
-]);
-
-// CSV data rows
-foreach ($rows as $r) {
-    fputcsv($output, [
-        $r['student_id'], $r['student_name'], $r['programme'], $r['assessor_name'], $r['company_name'],
-        $r['task_score'], $r['health_safety_score'], $r['connectivity_score'], $r['report_score'],
-        $r['clarity_score'], $r['lifelong_score'], $r['project_mgmt_score'], $r['time_mgmt_score'],
-        $r['total_score'], $r['qualitative_comments']
-    ]);
+// Loop through each row and echo the data separated by commas
+foreach ($rows as $row) {
+    // Replace double quotes inside comments to avoid breaking CSV format
+    $safe_comments = str_replace('"', '""', $row['qualitative_comments']);
+    
+    echo '"' . $row['student_id'] . '",';
+    echo '"' . $row['student_name'] . '",';
+    echo '"' . $row['programme'] . '",';
+    echo '"' . $row['assessor_name'] . '",';
+    echo '"' . $row['company_name'] . '",';
+    echo '"' . $row['task_score'] . '",';
+    echo '"' . $row['health_safety_score'] . '",';
+    echo '"' . $row['connectivity_score'] . '",';
+    echo '"' . $row['report_score'] . '",';
+    echo '"' . $row['clarity_score'] . '",';
+    echo '"' . $row['lifelong_score'] . '",';
+    echo '"' . $row['project_mgmt_score'] . '",';
+    echo '"' . $row['time_mgmt_score'] . '",';
+    echo '"' . $row['total_score'] . '",';
+    echo '"' . $safe_comments . '"' . "\n";
 }
 
-fclose($output);
 exit();
 ?>

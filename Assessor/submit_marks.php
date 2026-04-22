@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['internship_id'])) {
     } else if (!is_numeric($internship_id) || intval($internship_id) <= 0) {
         $error_message = "Invalid student selection. Please go back and select a valid student.";
     } else {
+        // Calculate weighted total score
         $raw_total = ($task * 0.10) + ($health * 0.10) + ($connectivity * 0.10) + 
                      ($report * 0.15) + ($clarity * 0.10) + ($lifelong * 0.15) + 
                      ($project * 0.15) + ($time * 0.15);
@@ -74,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['internship_id'])) {
                 'time_m' => $time, 'total' => $total_score, 'comm' => $comments
             ]);
             
-            // calculate class average after new submission
+            // Redirect after successful submission
             header("Location: submit_marks.php?status=success&score=" . $total_score);
             exit();
         } catch (PDOException $e) {
@@ -87,7 +88,7 @@ if (isset($_GET['status']) && $_GET['status'] == 'success') {
     $success_message = "Assessment submitted successfully! Final Weighted Score: <strong>" . htmlspecialchars($_GET['score']) . " / 100</strong>";
 }
 
-// fetch all evaluated students for this assessor
+// Fetch all evaluated students for this assessor
 $sql_evaluated = "SELECT i.internship_id, s.student_id, s.student_name, 
                          a.total_score, a.task_score, a.health_safety_score, 
                          a.connectivity_score, a.report_score, a.clarity_score, 
@@ -102,7 +103,7 @@ $stmt_evaluated = $pdo->prepare($sql_evaluated);
 $stmt_evaluated->execute(['assessor_id' => $assessor_id]);
 $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
 
-// calculate class average
+// Calculate class average
 $total_students_evaluated = count($evaluated_students);
 $average_score = 0;
 if ($total_students_evaluated > 0) {
@@ -111,19 +112,13 @@ if ($total_students_evaluated > 0) {
     $average_score = round($sum / $total_students_evaluated, 2);
 }
 
-// Count pending evaluations for the navbar badge
-$sql_pending_count = "SELECT COUNT(*) FROM Internships i
-                      LEFT JOIN Assessments a ON i.internship_id = a.internship_id
-                      WHERE i.assessor_id = :assessor_id AND a.assessment_id IS NULL";
-$stmt_pending_count = $pdo->prepare($sql_pending_count);
-$stmt_pending_count->execute(['assessor_id' => $assessor_id]);
-$pending_count = $stmt_pending_count->fetchColumn();
-
-// Helper: return CSS class based on score grade band
+// Helper: return CSS class based on 5 score grade bands
 function getScoreBadgeClass($score) {
-    if ($score >= 70) return 'score-merit';
-    if ($score >= 50) return 'score-pass';
-    return 'score-fail';
+    if ($score >= 70) return 'score-tier-1';
+    if ($score >= 60) return 'score-tier-2';
+    if ($score >= 50) return 'score-tier-3';
+    if ($score >= 40) return 'score-tier-4';
+    return 'score-tier-5';
 }
 ?>
 
@@ -132,7 +127,10 @@ function getScoreBadgeClass($score) {
 <head>
     <meta charset="UTF-8">
     <title>View Results - Assessor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
+        .admin-link:hover { color: #7a327e; text-decoration: underline; }
         body { background-color: #f8f9fa; color: #1d2125; font-family: Arial, Helvetica, sans-serif; margin: 0; padding-top: 80px; }
         .moodle-navbar-white { background-color: #ffffff; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; height: 70px; border-bottom: 1px solid #dee2e6; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
         .nav-left-white { display: flex; align-items: center; height: 100%; }
@@ -162,12 +160,11 @@ function getScoreBadgeClass($score) {
         .moodle-table tbody tr:hover { background-color: #f1f3f5; }
         
         .th-content { display: flex; align-items: center; justify-content: space-between; }
-        .weight-text { color: #7a327e; font-size: 11px; margin-left: 5px; font-weight: normal; }
         .sort-icons { display: flex; flex-direction: column; font-size: 9px; margin-left: 8px; color: #ced4da; }
         .active-sort { color: #7a327e; }
 
-        /* Modal Styles */
-        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
+        /* Modal Styles - 增加了 backdrop-filter: blur(3px); */
+        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
         .moodle-modal-header h2 { margin: 0; font-size: 20px; color: #10263b; }
@@ -175,9 +172,7 @@ function getScoreBadgeClass($score) {
         .moodle-close-x:hover { color: #333; }
         .moodle-modal-body { padding: 25px; font-size: 15px; line-height: 1.6; color: #333; }
         .moodle-modal-footer { padding: 15px 25px; border-top: 1px solid #dee2e6; text-align: right; background-color: #f8f9fa; }
-        .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
-        .admin-link:hover { color: #7a327e; text-decoration: underline; }
-        .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none;}
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
 
         /* Stats Dashboard */
@@ -188,23 +183,16 @@ function getScoreBadgeClass($score) {
         
         .detail-raw-score { font-size: 16px; color: #10263b; }
         
-        /* Score grade badges */
-        .score-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px; min-width: 60px; text-align: center; }
-        .score-merit { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-        .score-pass  { background-color: #cfe2ff; color: #084298; border: 1px solid #b6d4fe; }
-        .score-fail  { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        /* 5-Tier Score Grade Badges (Unified Pastel/Muted Colors) */
+        .score-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px; min-width: 60px; text-align: center; border: 1px solid transparent; }
+        .score-tier-1 { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; }
+        .score-tier-2 { background-color: #e0e7ff; color: #1e3a8a; border-color: #c7d2fe; }
+        .score-tier-3 { background-color: #cfe2ff; color: #084298; border-color: #b6d4fe; }
+        .score-tier-4 { background-color: #fff3cd; color: #856404; border-color: #ffe69c; }
+        .score-tier-5 { background-color: #f8d7da; color: #842029; border-color: #f5c2c7; }
         
-        /* Logout Link */
-        .logout-link { 
-            color: #555; 
-            text-decoration: none; 
-            font-size: 14px; 
-            transition: all 0.2s ease; 
-        }
-        .logout-link:hover { 
-            color: #842029; 
-            text-decoration: underline; 
-        }
+        .logout-link { color: #555; text-decoration: none; font-size: 14px; transition: all 0.2s ease; }
+        .logout-link:hover { color: #842029; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -213,14 +201,10 @@ function getScoreBadgeClass($score) {
         <div class="nav-left-white">
             <img src="../images/logo.png" alt="University Logo" class="nav-logo-white">
             <div class="nav-links">
-                <a href="evaluate_student.php">
-                    Evaluate
-                    <?php if ($pending_count > 0): ?>
-                        <span style="background-color:#dc3545; color:white; border-radius:10px; padding:2px 8px; font-size:11px; margin-left:6px; font-weight:bold;"><?= $pending_count ?></span>
-                    <?php endif; ?>
-                </a>
+                <a href="assessor_dashboard.php">Dashboard</a>
+                <a href="evaluate_student.php">Evaluate</a>
                 <a href="submit_marks.php" class="active-link">View Results</a>
-                <a id="openRubricModalBtn">Grading Rubric & Help</a>
+                <a id="openRubricModalBtn" style="cursor: pointer;">Grading Rubric & Help</a>
             </div>
         </div>
         <div class="nav-right-white">
@@ -240,7 +224,7 @@ function getScoreBadgeClass($score) {
         <?php endif; ?>
 
         <div class="moodle-card-white">
-            <h2 class="section-title">My Evaluated Students (Weighted Scores)</h2>
+            <h2 class="section-title">My Evaluated Students (Detailed Scores)</h2>
             
             <?php if ($total_students_evaluated == 0): ?>
                 <input type="text" id="searchInput" class="moodle-search-bar" placeholder="Search ID or Name..." disabled>
@@ -260,15 +244,15 @@ function getScoreBadgeClass($score) {
                             <tr>
                                 <th onclick="sortTable(0, 'str')"><div class="th-content">Student ID <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(1, 'str')"><div class="th-content">Name <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(2, 'num')"><div class="th-content">Tasks<span class="weight-text">(10%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(3, 'num')"><div class="th-content">H&S<span class="weight-text">(10%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(4, 'num')"><div class="th-content">Theory<span class="weight-text">(10%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(5, 'num')"><div class="th-content">Report<span class="weight-text">(15%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(6, 'num')"><div class="th-content">Clarity<span class="weight-text">(10%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(7, 'num')"><div class="th-content">Lifelong<span class="weight-text">(15%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(8, 'num')"><div class="th-content">Proj. Mgmt<span class="weight-text">(15%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(9, 'num')"><div class="th-content">Time Mgmt<span class="weight-text">(15%)</span> <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(10, 'num')"><div class="th-content">Final Score <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(2, 'num')"><div class="th-content">Tasks <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(3, 'num')"><div class="th-content">H&S <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(4, 'num')"><div class="th-content">Theory <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(5, 'num')"><div class="th-content">Report <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(6, 'num')"><div class="th-content">Clarity <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(7, 'num')"><div class="th-content">Lifelong <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(8, 'num')"><div class="th-content">Proj. Mgmt <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(9, 'num')"><div class="th-content">Time Mgmt <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(10, 'num')" style="min-width: 115px; padding-right: 25px;"><div class="th-content">Final Score <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -288,16 +272,18 @@ function getScoreBadgeClass($score) {
                                     data-comments="<?= htmlspecialchars($row['qualitative_comments']) ?>">
                                     
                                     <td><?= htmlspecialchars($row['student_id']) ?></td>
-                                    <td><?= htmlspecialchars($row['student_name']) ?></td>
-                                    <td><?= number_format($row['task_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['health_safety_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['connectivity_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['report_score'] * 0.15, 2) ?></td>
-                                    <td><?= number_format($row['clarity_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['lifelong_score'] * 0.15, 2) ?></td>
-                                    <td><?= number_format($row['project_mgmt_score'] * 0.15, 2) ?></td>
-                                    <td><?= number_format($row['time_mgmt_score'] * 0.15, 2) ?></td>
-                                    <td><span class="score-badge <?= getScoreBadgeClass($row['total_score']) ?>"><?= number_format($row['total_score'], 2) ?></span></td>
+                                    <td><strong><?= htmlspecialchars($row['student_name']) ?></strong></td>
+                                    
+                                    <td><?= number_format($row['task_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['health_safety_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['connectivity_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['report_score'] * 0.15, 2) ?>/15.00</td>
+                                    <td><?= number_format($row['clarity_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['lifelong_score'] * 0.15, 2) ?>/15.00</td>
+                                    <td><?= number_format($row['project_mgmt_score'] * 0.15, 2) ?>/15.00</td>
+                                    <td><?= number_format($row['time_mgmt_score'] * 0.15, 2) ?>/15.00</td>
+                                    
+                                    <td><span class="score-badge <?= getScoreBadgeClass($row['total_score']) ?>"><?= number_format($row['total_score'], 2) ?></span> / 100.00</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -316,10 +302,10 @@ function getScoreBadgeClass($score) {
             <div class="moodle-modal-body">
                 <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #dee2e6; padding-bottom: 15px; margin-bottom: 20px;">
                     <div style="font-size: 16px;"><strong>Student ID:</strong> <span id="detailId"></span></div>
-                    <div style="font-size: 16px;"><strong>Final Weighted Score:</strong> <span id="detailTotal" class="score-badge" style="font-size: 18px; padding: 6px 16px;"></span> / 100</div>
+                    <div style="font-size: 16px;"><strong>Final Weighted Score:</strong> <span id="detailTotal" class="score-badge" style="font-size: 18px; padding: 6px 16px;"></span> / 100.00</div>
                 </div>
                 
-                <h4 style="margin-top: 0; color: #10263b;">Raw Component Scores (Out of 100)</h4>
+                <h4 style="margin-top: 0; color: #10263b;">Weighted Component Scores</h4>
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; margin-bottom: 25px;">
                     <ul style="column-count: 2; column-gap: 30px; margin: 0; padding-left: 20px; color: #555;">
                         <li style="margin-bottom: 8px;">Tasks/Projects: <strong class="detail-raw-score" id="detTask"></strong></li>
@@ -334,8 +320,7 @@ function getScoreBadgeClass($score) {
                 </div>
 
                 <h4 style="color: #10263b; margin-bottom: 10px;">Qualitative Comments</h4>
-                <div id="detailComments" style="background-color: #fcfbf9; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; min-height: 80px; color: #333; line-height: 1.5; white-space: pre-wrap;">
-                </div>
+                <div id="detailComments" style="background-color: #fcfbf9; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; min-height: 80px; color: #333; line-height: 1.5; white-space: pre-wrap;"></div>
             </div>
             <div class="moodle-modal-footer">
                 <button id="closeDetailsBtn" class="moodle-btn-submit" style="margin-top:0; background-color: #6c757d;">Close</button>
@@ -343,117 +328,123 @@ function getScoreBadgeClass($score) {
         </div>
     </div>
 
-    <div id="rubricModal" class="moodle-modal-overlay">
-        <div class="moodle-modal-box">
-            <div class="moodle-modal-header">
-                <h2>Grading Rubric & Help</h2>
-                <span class="moodle-close-x" id="closeRubricModalX">&times;</span>
-            </div>
-            <div class="moodle-modal-body">
-                <div style="background-color: #e8f0fe; border-left: 4px solid #10263b; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
-                    <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
-                    <span style="color: #555; font-size: 14px;">If you made an error in grading, require score adjustments after submission, or encounter any system issues, please contact our Database Administrator:</span>
-                    <div style="margin-top: 8px;">
-                        &#128100; <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
-                        &#9993; <a href="mailto:ChyeCheah.Tan@nottingham.edu.my" class="admin-link">ChyeCheah.Tan@nottingham.edu.my</a>
-                    </div>
-                </div>
-
-                <p><strong>Assessment Guidelines:</strong></p>
-                <p style="color: #555; margin-bottom: 15px;">Assessors must evaluate students using the predefined criteria. Please enter the <strong>Raw Marks (0-100)</strong> for each component. The system will automatically calculate the final score based on these strict weightages:</p>
-                
-                <div style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 20px;">
-                    <ul style="column-count: 2; column-gap: 20px; margin: 0; padding-left: 20px; color: #333;">
-                        <li style="margin-bottom: 8px;">Tasks/Projects: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Health & Safety: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Connectivity/Theory: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Report Presentation: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Clarity of Language: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Lifelong Learning: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Project Management: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Time Management: <strong>15%</strong></li>
-                    </ul>
-                </div>
-
-                <p style="color: #842029; background-color: #f8d7da; padding: 12px; border-radius: 4px; font-size: 14px; border: 1px solid #f5c2c7; margin: 0;">
-                    <strong>Mandatory Requirement:</strong> You must provide qualitative comments to justify the scores given. Weightages are fixed and cannot be modified.
-                </p>
-            </div>
-            <div class="moodle-modal-footer">
-                <button id="closeRubricModalBtn" class="moodle-btn-submit" style="margin-top:0; padding: 8px 20px;">Close</button>
-            </div>
-        </div>
-    </div>
+    <?php include 'assessor_help_modal.php'; ?>
 
     <script>
-        // Modal Logic - Grading Rubric
-        var rubricModal = document.getElementById("rubricModal");
-        var btn = document.getElementById("openRubricModalBtn");
-        var span = document.getElementById("closeRubricModalX");
-        var closeBtn = document.getElementById("closeRubricModalBtn");
-        btn.onclick = function() { rubricModal.style.display = "flex"; }
-        span.onclick = function() { rubricModal.style.display = "none"; }
-        closeBtn.onclick = function() { rubricModal.style.display = "none"; }
-
-        // Modal Logic - Double-click to view student details
+        // Downgraded Student JS Syntax
         var detailsModal = document.getElementById("studentDetailsModal");
-        document.querySelectorAll('.evaluated-row').forEach(row => {
-            row.addEventListener('dblclick', function() {
+        var tableRows = document.getElementsByClassName('evaluated-row');
+        
+        for (var i = 0; i < tableRows.length; i++) {
+            tableRows[i].addEventListener('dblclick', function() {
                 document.getElementById('detailStudentName').innerText = this.getAttribute('data-name');
                 document.getElementById('detailId').innerText = this.getAttribute('data-id');
-                const totalScore = parseFloat(this.getAttribute('data-total'));
-                const totalEl = document.getElementById('detailTotal');
-                totalEl.innerText = this.getAttribute('data-total');
-                totalEl.classList.remove('score-merit', 'score-pass', 'score-fail');
-                if (totalScore >= 70) totalEl.classList.add('score-merit');
-                else if (totalScore >= 50) totalEl.classList.add('score-pass');
-                else totalEl.classList.add('score-fail');
                 
-                document.getElementById('detTask').innerText = this.getAttribute('data-task');
-                document.getElementById('detHealth').innerText = this.getAttribute('data-health');
-                document.getElementById('detConn').innerText = this.getAttribute('data-conn');
-                document.getElementById('detReport').innerText = this.getAttribute('data-report');
-                document.getElementById('detClarity').innerText = this.getAttribute('data-clarity');
-                document.getElementById('detLife').innerText = this.getAttribute('data-life');
-                document.getElementById('detProj').innerText = this.getAttribute('data-proj');
-                document.getElementById('detTime').innerText = this.getAttribute('data-time');
+                var totalScore = parseFloat(this.getAttribute('data-total'));
+                var totalEl = document.getElementById('detailTotal');
+                totalEl.innerText = this.getAttribute('data-total');
+                
+                totalEl.className = 'score-badge';
+                if (totalScore >= 70) totalEl.className += ' score-tier-1';
+                else if (totalScore >= 60) totalEl.className += ' score-tier-2';
+                else if (totalScore >= 50) totalEl.className += ' score-tier-3';
+                else if (totalScore >= 40) totalEl.className += ' score-tier-4';
+                else totalEl.className += ' score-tier-5';
+                
+                // JS 里获取原分，再乘以对应的权重比例
+                document.getElementById('detTask').innerText = (parseFloat(this.getAttribute('data-task')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detHealth').innerText = (parseFloat(this.getAttribute('data-health')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detConn').innerText = (parseFloat(this.getAttribute('data-conn')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detReport').innerText = (parseFloat(this.getAttribute('data-report')) * 0.15).toFixed(2) + '/15.00';
+                document.getElementById('detClarity').innerText = (parseFloat(this.getAttribute('data-clarity')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detLife').innerText = (parseFloat(this.getAttribute('data-life')) * 0.15).toFixed(2) + '/15.00';
+                document.getElementById('detProj').innerText = (parseFloat(this.getAttribute('data-proj')) * 0.15).toFixed(2) + '/15.00';
+                document.getElementById('detTime').innerText = (parseFloat(this.getAttribute('data-time')) * 0.15).toFixed(2) + '/15.00';
                 
                 document.getElementById('detailComments').innerText = this.getAttribute('data-comments');
                 
                 detailsModal.style.display = "flex";
             });
-        });
+        }
 
-        document.getElementById("closeDetailsX").onclick = function() { detailsModal.style.display = "none"; }
-        document.getElementById("closeDetailsBtn").onclick = function() { detailsModal.style.display = "none"; }
+        document.getElementById("closeDetailsX").onclick = function() { detailsModal.style.display = "none"; };
+        document.getElementById("closeDetailsBtn").onclick = function() { detailsModal.style.display = "none"; };
+
+        function filterResults() {
+            var input = document.getElementById('searchInput');
+            var filter = input.value.toUpperCase();
+            var table = document.getElementById("resultsTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var rowText = tr[i].innerText.toUpperCase();
+                if (rowText.indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+
+        var curCol = -1;
+        var curDir = 'asc';
+        
+        function sortTable(idx, type) {
+            var table = document.getElementById("resultsTable");
+            var tbody = table.getElementsByTagName("tbody")[0];
+            var rows = tbody.getElementsByTagName("tr");
+            var rowsArray = [];
+            
+            for (var i = 0; i < rows.length; i++) {
+                rowsArray.push(rows[i]);
+            }
+
+            var dir = (curCol === idx && curDir === 'asc') ? 'desc' : 'asc';
+            
+            var icons = document.querySelectorAll('.sort-icons span');
+            for (var j = 0; j < icons.length; j++) {
+                icons[j].classList.remove('active-sort');
+            }
+            
+            var targetIcon = table.getElementsByTagName("th")[idx].querySelector(dir === 'asc' ? '.up' : '.down');
+            if (targetIcon) targetIcon.classList.add('active-sort');
+
+            curCol = idx;
+            curDir = dir;
+
+            rowsArray.sort(function(a, b) {
+                var vA = a.getElementsByTagName("td")[idx].innerText;
+                var vB = b.getElementsByTagName("td")[idx].innerText;
+                
+                if (type === 'num') {
+                    vA = parseFloat(vA);
+                    vB = parseFloat(vB);
+                    return (dir === 'asc') ? (vA - vB) : (vB - vA);
+                } else {
+                    vA = vA.toLowerCase();
+                    vB = vB.toLowerCase();
+                    if (vA < vB) return (dir === 'asc') ? -1 : 1;
+                    if (vA > vB) return (dir === 'asc') ? 1 : -1;
+                    return 0;
+                }
+            });
+
+            for (var k = 0; k < rowsArray.length; k++) {
+                tbody.appendChild(rowsArray[k]);
+            }
+        }
+
+        var rubricModal = document.getElementById("rubricModal"); // 注意这个在包含的文件里，或者如果在其他逻辑里可能会被覆盖，由于引入了外部modal，这个变量依然能找到对应的ID
+        var openRubricBtn = document.getElementById("openRubricModalBtn");
+        var closeRubricX = document.getElementById("closeRubricModalX");
+        
+        // 这里的 onclick 可能会和 assessor_help_modal.php 里的 listener 重复，但无妨。如果觉得冗余，你也可以删掉。这里为你保留原有逻辑。
+        if(openRubricBtn) openRubricBtn.onclick = function() { rubricModal = document.getElementById("rubricModal"); if(rubricModal) rubricModal.style.display = "flex"; }
+        if(closeRubricX) closeRubricX.onclick = function() { rubricModal = document.getElementById("rubricModal"); if(rubricModal) rubricModal.style.display = "none"; }
 
         window.onclick = function(event) { 
-            if (event.target == rubricModal) rubricModal.style.display = "none"; 
             if (event.target == detailsModal) detailsModal.style.display = "none"; 
-        }
-
-        // Search and Sort
-        function filterResults() {
-            let f = document.getElementById('searchInput').value.toUpperCase();
-            document.querySelectorAll('#resultsTable tbody tr').forEach(r => {
-                r.style.display = r.innerText.toUpperCase().indexOf(f) > -1 ? "" : "none";
-            });
-        }
-
-        let curCol = -1, curDir = 'asc';
-        function sortTable(idx, type) {
-            const table = document.getElementById("resultsTable");
-            const rows = Array.from(table.tBodies[0].rows);
-            let dir = (curCol === idx && curDir === 'asc') ? 'desc' : 'asc';
-            document.querySelectorAll('.sort-icons span').forEach(s => s.classList.remove('active-sort'));
-            table.querySelectorAll("th")[idx].querySelector(dir === 'asc' ? '.up' : '.down').classList.add('active-sort');
-            curCol = idx; curDir = dir;
-            rows.sort((a, b) => {
-                let vA = a.cells[idx].innerText, vB = b.cells[idx].innerText;
-                if(type === 'num') return dir === 'asc' ? parseFloat(vA) - parseFloat(vB) : parseFloat(vB) - parseFloat(vA);
-                return dir === 'asc' ? vA.localeCompare(vB) : vB.localeCompare(vA);
-            });
-            rows.forEach(r => table.tBodies[0].appendChild(r));
+            if (event.target == document.getElementById("rubricModal")) document.getElementById("rubricModal").style.display = "none";
         }
     </script>
 </body>

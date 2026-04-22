@@ -13,26 +13,40 @@ $initial = strtoupper(substr($username, 0, 1));
 $success_msg = '';
 $error_msg = '';
 
+// Add Internship Assignment
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['assign_internship'])) {
+    $student_id = $_POST['student_id'];
+    $assessor_id = $_POST['assessor_id'];
+    $company = $_POST['company'];
+    $details = $_POST['details'];
+
     try {
-        $stmt = $pdo->prepare("INSERT INTO Internships (student_id, assessor_id, company_name, other_details) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$_POST['student_id'], $_POST['assessor_id'], $_POST['company'], $_POST['details']]);
+        $stmt = $pdo->prepare("INSERT INTO Internships (student_id, assessor_id, company_name, other_details) VALUES (:sid, :aid, :comp, :det)");
+        $stmt->bindParam(':sid', $student_id);
+        $stmt->bindParam(':aid', $assessor_id);
+        $stmt->bindParam(':comp', $company);
+        $stmt->bindParam(':det', $details);
+        $stmt->execute();
         $success_msg = "Internship assigned successfully!";
     } catch (PDOException $e) {
         $error_msg = "Error assigning internship. Student might already be assigned.";
     }
 }
 
-// Update internship details (Student cannot be changed - delete and reassign instead)
+// Update internship details
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_internship'])) {
-    $update_id = trim($_POST['update_id']);
+    $update_id = $_POST['update_id'];
     $new_assessor = $_POST['edit_assessor_id'];
-    $new_company = trim($_POST['edit_company']);
-    $new_details = trim($_POST['edit_details']);
+    $new_company = $_POST['edit_company'];
+    $new_details = $_POST['edit_details'];
 
     try {
         $stmt = $pdo->prepare("UPDATE Internships SET assessor_id = :aid, company_name = :comp, other_details = :det WHERE internship_id = :id");
-        $stmt->execute(['aid' => $new_assessor, 'comp' => $new_company, 'det' => $new_details, 'id' => $update_id]);
+        $stmt->bindParam(':aid', $new_assessor);
+        $stmt->bindParam(':comp', $new_company);
+        $stmt->bindParam(':det', $new_details);
+        $stmt->bindParam(':id', $update_id);
+        $stmt->execute();
         $success_msg = "Internship details updated successfully!";
     } catch (PDOException $e) {
         $error_msg = "Error updating internship details.";
@@ -42,8 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_internship'])) 
 // Delete internship assignment
 if (isset($_GET['delete_id'])) {
     try {
+        $del_id = $_GET['delete_id'];
         $stmt = $pdo->prepare("DELETE FROM Internships WHERE internship_id = :id");
-        $stmt->execute(['id' => $_GET['delete_id']]);
+        $stmt->bindParam(':id', $del_id);
+        $stmt->execute();
         header("Location: manage_internships.php?deleted=1"); 
         exit();
     } catch (PDOException $e) {
@@ -51,7 +67,6 @@ if (isset($_GET['delete_id'])) {
     }
 }
 
-// Show success message after successful deletion redirect
 if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
     $success_msg = "Internship assignment deleted successfully!";
 }
@@ -72,6 +87,7 @@ $internships = $pdo->query($sql)->fetchAll();
     <meta charset="UTF-8">
     <title>Assign Internships - Admin</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .moodle-form-input { padding: 12px 18px; border: 1px solid #8f959e; border-radius: 4px; font-size: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;}
         .moodle-form-input:focus { outline: none; border-color: #10263b; box-shadow: 0 0 0 2px rgba(16, 38, 59, 0.2); background-color: #e8f0fe; }
@@ -86,8 +102,9 @@ $internships = $pdo->query($sql)->fetchAll();
         .btn-danger:hover { background-color: #c82333; }
         .moodle-form-label { display: block; font-weight: bold; margin-bottom: 8px; color: #1d2125; font-size: 14px; }
         
-        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
-        .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
+        /* 注意这里的 max-width 已经统一改成了 550px */
+        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 550px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
         .moodle-modal-header h2 { margin: 0; font-size: 20px; color: #10263b; }
         .moodle-close-x { font-size: 24px; font-weight: bold; color: #888; cursor: pointer; }
@@ -165,7 +182,7 @@ $internships = $pdo->query($sql)->fetchAll();
                             <td>
                                 <button class="btn-action btn-edit" 
                                         onclick="openEditModal('<?= htmlspecialchars($row['internship_id']); ?>', '<?= htmlspecialchars($row['student_name']) . ' (' . htmlspecialchars($row['student_id']) . ')'; ?>', '<?= htmlspecialchars($row['assessor_id']); ?>', '<?= htmlspecialchars($row['company_name'], ENT_QUOTES); ?>', '<?= htmlspecialchars($row['other_details'], ENT_QUOTES); ?>')">Edit</button>
-                                <a href="manage_internships.php?delete_id=<?= $row['internship_id']; ?>" class="btn-action btn-danger" onclick="return confirm('WARNING: Are you sure you want to delete this internship assignment?');">Delete</a>
+                                <a href="manage_internships.php?delete_id=<?= $row['internship_id']; ?>" class="btn-action btn-danger" onclick="event.preventDefault(); showDeleteModal(this.href, 'Are you sure you want to delete this internship assignment?');">Delete</a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -176,7 +193,7 @@ $internships = $pdo->query($sql)->fetchAll();
     </div>
 
     <div id="editModal" class="moodle-modal-overlay">
-        <div class="moodle-modal-box" style="max-width: 600px;">
+        <div class="moodle-modal-box">
             <div class="moodle-modal-header">
                 <h2>Edit Internship Assignment</h2>
                 <span class="moodle-close-x" id="closeEditX">&times;</span>
@@ -216,52 +233,51 @@ $internships = $pdo->query($sql)->fetchAll();
             </form>
         </div>
     </div>
-
-    <div id="rubricModal" class="moodle-modal-overlay">
-        <div class="moodle-modal-box" style="max-width: 650px;">
-            <div class="moodle-modal-header">
-                <h2>Admin Help & Grading Rubric</h2>
-                <span class="moodle-close-x" id="closeRubricModalX">&times;</span>
+<div id="deleteConfirmModal" class="moodle-modal-overlay">
+        <div class="moodle-modal-box" style="max-width: 450px;">
+            <div class="moodle-modal-header" style="border-bottom: 2px solid #f5c2c7; background-color: #fdf2f2;">
+                <h2 style="color: #dc3545; font-size: 18px;"><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h2>
+                <span class="moodle-close-x" id="closeDeleteX">&times;</span>
             </div>
             <div class="moodle-modal-body">
-                <div style="background-color: #e8f0fe; border-left: 4px solid #10263b; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
-                    <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
-                    <span style="color: #555; font-size: 14px;">If you encounter unexpected behavior, system crashes, issues with deleting linked records, or need database maintenance, please contact:</span>
-                    <div style="margin-top: 8px;">
-                        &#128100; <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
-                        &#9993; <a href="mailto:ChyeCheah.Tan@nottingham.edu.my" class="admin-link">ChyeCheah.Tan@nottingham.edu.my</a>
-                    </div>
-                </div>
-
-                <p><strong>System Guidelines & Potential Issues:</strong></p>
-                <ul style="color: #555; margin-bottom: 15px; font-size: 14px;">
-                    <li><strong>Record Deletion:</strong> You cannot delete a student or assessor if they have existing internship records linked to them.</li>
-                    <li><strong>Duplicate Entries:</strong> The system prevents adding users or students with IDs/Usernames that already exist.</li>
-                    <li><strong>Data Integrity:</strong> All modifications are permanently saved to maintain accurate internship records.</li>
-                </ul>
-
-                <p><strong>Reference: Assessment Weightages (Fixed):</strong></p>
-                <div style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 20px;">
-                    <ul style="column-count: 2; column-gap: 20px; margin: 0; padding-left: 20px; color: #333; font-size: 14px;">
-                        <li style="margin-bottom: 8px;">Tasks/Projects: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Health & Safety: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Connectivity/Theory: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Report Presentation: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Clarity of Language: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Lifelong Learning: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Project Management: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Time Management: <strong>15%</strong></li>
-                    </ul>
-                </div>
+                <p id="deleteConfirmMessage" style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #10263b;"></p>
+                <p style="color: #666; font-size: 14px; margin-top: 0;">This action cannot be undone. All linked data may be affected.</p>
             </div>
             <div class="moodle-modal-footer">
-                <button id="closeRubricModalBtn" class="moodle-btn-submit" style="margin-top:0; padding: 8px 20px;">Close</button>
+                <button type="button" id="cancelDeleteBtn" style="background-color: #f8f9fa; color: #555; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: bold; font-size: 15px;">Cancel</button>
+                <a href="#" id="confirmDeleteLink" class="moodle-btn-submit" style="background-color: #dc3545; text-decoration: none; display: inline-block; padding: 10px 25px;">Continue</a>
             </div>
         </div>
     </div>
 
     <script>
-        // Edit
+        var deleteModal = document.getElementById("deleteConfirmModal");
+        var confirmDeleteLink = document.getElementById("confirmDeleteLink");
+        var deleteMessage = document.getElementById("deleteConfirmMessage");
+        var closeDeleteX = document.getElementById("closeDeleteX");
+        var cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+
+        // 打开弹窗并接收动态的删除链接和文本内容
+        function showDeleteModal(deleteUrl, messageText) {
+            deleteMessage.innerText = messageText;
+            confirmDeleteLink.href = deleteUrl; // 动态赋予删除链接
+            deleteModal.style.display = "flex";
+        }
+
+        // 关闭弹窗逻辑
+        if(closeDeleteX) { closeDeleteX.onclick = function() { deleteModal.style.display = "none"; } }
+        if(cancelDeleteBtn) { cancelDeleteBtn.onclick = function() { deleteModal.style.display = "none"; } }
+
+        // 点击背景阴影关闭弹窗（因为你之前的 window.onclick 会被覆盖，这里用 addEventListener 更安全）
+        window.addEventListener('click', function(event) {
+            if (event.target == deleteModal) {
+                deleteModal.style.display = "none";
+            }
+        });
+    </script>
+    <?php include 'admin_help_modal.php'; ?>
+
+    <script>
         var editModal = document.getElementById("editModal");
         var closeEditX = document.getElementById("closeEditX");
         var cancelEditBtn = document.getElementById("cancelEditBtn");
@@ -275,28 +291,23 @@ $internships = $pdo->query($sql)->fetchAll();
             editModal.style.display = "flex";
         }
 
-        closeEditX.onclick = function() { editModal.style.display = "none"; }
-        cancelEditBtn.onclick = function() { editModal.style.display = "none"; }
+        if(closeEditX) { closeEditX.onclick = function() { editModal.style.display = "none"; } }
+        if(cancelEditBtn) { cancelEditBtn.onclick = function() { editModal.style.display = "none"; } }
 
-        // Client-side validation for Assign Internship form
-        document.getElementById('assignForm').addEventListener('submit', function(event) {
-            const company = document.getElementById('company').value.trim();
-            if (company.length < 2) { alert("Error: Company Name must be at least 2 characters long."); event.preventDefault(); return; }
-        });
-
-        // Help & Rubric
-        var rubricModal = document.getElementById("rubricModal");
-        var openRubricBtn = document.getElementById("openRubricModalBtn");
-        var closeRubricX = document.getElementById("closeRubricModalX");
-        var closeRubricBtn = document.getElementById("closeRubricModalBtn");
-        
-        if(openRubricBtn) openRubricBtn.onclick = function() { rubricModal.style.display = "flex"; }
-        if(closeRubricX) closeRubricX.onclick = function() { rubricModal.style.display = "none"; }
-        if(closeRubricBtn) closeRubricBtn.onclick = function() { rubricModal.style.display = "none"; }
+        var form = document.getElementById('assignForm');
+        if (form) {
+            form.onsubmit = function(event) {
+                var company = document.getElementById('company').value.trim();
+                if (company.length < 2) { 
+                    alert("Error: Company Name must be at least 2 characters long."); 
+                    event.preventDefault(); 
+                    return false; 
+                }
+            };
+        }
 
         window.onclick = function(event) { 
-            if (event.target == rubricModal) rubricModal.style.display = "none";
-            if (event.target == editModal) editModal.style.display = "none";
+            if (event.target == editModal) { editModal.style.display = "none"; }
         }
     </script>
 </body>

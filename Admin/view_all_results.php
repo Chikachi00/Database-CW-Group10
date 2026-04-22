@@ -29,20 +29,24 @@ $stmt_evaluated = $pdo->prepare($sql_evaluated);
 $stmt_evaluated->execute();
 $evaluated_students = $stmt_evaluated->fetchAll(PDO::FETCH_ASSOC);
 
-// average
+// average calculation using basic variables
 $total_students_evaluated = count($evaluated_students);
 $average_score = 0;
 if ($total_students_evaluated > 0) {
     $sum = 0;
-    foreach ($evaluated_students as $student) { $sum += $student['total_score']; }
+    foreach ($evaluated_students as $student) { 
+        $sum += $student['total_score']; 
+    }
     $average_score = round($sum / $total_students_evaluated, 2);
 }
 
-// Helper: return CSS class based on score grade band
+// Helper: return CSS class based on 5 score grade bands
 function getScoreBadgeClass($score) {
-    if ($score >= 70) return 'score-merit';
-    if ($score >= 50) return 'score-pass';
-    return 'score-fail';
+    if ($score >= 70) return 'score-tier-1';
+    if ($score >= 60) return 'score-tier-2';
+    if ($score >= 50) return 'score-tier-3';
+    if ($score >= 40) return 'score-tier-4';
+    return 'score-tier-5';
 }
 ?>
 
@@ -52,6 +56,7 @@ function getScoreBadgeClass($score) {
     <meta charset="UTF-8">
     <title>View All Results - Admin Dashboard</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Dashboard Stats */
         .stats-dashboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; }
@@ -64,30 +69,41 @@ function getScoreBadgeClass($score) {
         .moodle-search-bar { width: 100%; padding: 12px 18px; border: 1px solid #8f959e; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
         .moodle-search-bar:focus { outline: none; border-color: #10263b; box-shadow: 0 0 0 2px rgba(16, 38, 59, 0.2); background-color: #e8f0fe; }
         
-        /* search modal */
-        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; }
-        .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
+        /* 注意这里的 max-width 已经统一改成了 550px */
+        .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 550px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
         .moodle-modal-header h2 { margin: 0; font-size: 20px; color: #10263b; }
         .moodle-close-x { font-size: 24px; font-weight: bold; color: #888; cursor: pointer; }
         .moodle-close-x:hover { color: #333; }
         .moodle-modal-body { padding: 25px; font-size: 15px; line-height: 1.6; color: #333; }
         .moodle-modal-footer { padding: 15px 25px; border-top: 1px solid #dee2e6; text-align: right; background-color: #f8f9fa; }
-        .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .moodle-btn-submit { background-color: #10263b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none;}
         .moodle-btn-submit:hover { background-color: #0d1e2e; }
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; transition: color 0.2s ease; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
         
+        /* Table Styles (Width & Padding optimized to prevent scrollbar) */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 20px; border: 1px solid #dee2e6; border-radius: 4px; }
+        .moodle-table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+        .moodle-table th, .moodle-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        .moodle-table th { background-color: #f8f9fa; color: #10263b; cursor: pointer; user-select: none; font-size: 12.5px; }
+        .moodle-table tbody tr { cursor: pointer; transition: background-color 0.2s ease; }
+        .moodle-table tbody tr:hover { background-color: #f1f3f5; }
+
         /* Table Header */
         .th-content { display: flex; align-items: center; justify-content: space-between; }
-        .sort-icons { display: flex; flex-direction: column; font-size: 9px; margin-left: 8px; color: #ced4da; }
+        .sort-icons { display: flex; flex-direction: column; font-size: 9px; margin-left: 5px; color: #ced4da; }
         .active-sort { color: #7a327e; }
         
-        /* Score grade badges */
-        .score-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px; min-width: 60px; text-align: center; }
-        .score-merit { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-        .score-pass  { background-color: #cfe2ff; color: #084298; border: 1px solid #b6d4fe; }
-        .score-fail  { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        /* 5-Tier Score Grade Badges */
+        .score-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 13px; min-width: 50px; text-align: center; border: 1px solid transparent; }
+        
+        .score-tier-1 { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; } 
+        .score-tier-2 { background-color: #e0e7ff; color: #1e3a8a; border-color: #c7d2fe; } 
+        .score-tier-3 { background-color: #cfe2ff; color: #084298; border-color: #b6d4fe; } 
+        .score-tier-4 { background-color: #fff3cd; color: #856404; border-color: #ffe69c; } 
+        .score-tier-5 { background-color: #f8d7da; color: #842029; border-color: #f5c2c7; } 
     </style>
 </head>
 <body>
@@ -144,7 +160,7 @@ function getScoreBadgeClass($score) {
                                 <th onclick="sortTable(8, 'num')"><div class="th-content">Life <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(9, 'num')"><div class="th-content">Proj <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(10, 'num')"><div class="th-content">Time <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(11, 'num')"><div class="th-content">Final Score <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(11, 'num')" style="min-width: 90px; padding-right: 10px;"><div class="th-content">Final Score <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -167,14 +183,16 @@ function getScoreBadgeClass($score) {
                                     <td><?= htmlspecialchars($row['student_id']) ?></td>
                                     <td><strong><?= htmlspecialchars($row['student_name']) ?></strong></td>
                                     <td><span style="background-color:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; color:#10263b;"><?= htmlspecialchars($row['assessor_name']) ?></span></td>
-                                    <td><?= number_format($row['task_score'], 2) ?>/10.00</td>
-                                    <td><?= number_format($row['health_safety_score'], 2) ?>/10.00</td>
-                                    <td><?= number_format($row['connectivity_score'], 2) ?>/10.00</td>
-                                    <td><?= number_format($row['report_score'], 2) ?>/15.00</td>
-                                    <td><?= number_format($row['clarity_score'], 2) ?>/10.00</td>
-                                    <td><?= number_format($row['lifelong_score'], 2) ?>/15.00</td>
-                                    <td><?= number_format($row['project_mgmt_score'], 2) ?>/15.00</td>
-                                    <td><?= number_format($row['time_mgmt_score'], 2) ?>/15.00</td>
+                                    
+                                    <td><?= number_format($row['task_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['health_safety_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['connectivity_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['report_score'] * 0.15, 2) ?>/15.00</td>
+                                    <td><?= number_format($row['clarity_score'] * 0.10, 2) ?>/10.00</td>
+                                    <td><?= number_format($row['lifelong_score'] * 0.15, 2) ?>/15.00</td>
+                                    <td><?= number_format($row['project_mgmt_score'] * 0.15, 2) ?>/15.00</td>
+                                    <td><?= number_format($row['time_mgmt_score'] * 0.15, 2) ?>/15.00</td>
+                                    
                                     <td><span class="score-badge <?= getScoreBadgeClass($row['total_score']) ?>"><?= number_format($row['total_score'], 2) ?></span> / 100.00</td>
                                 </tr>
                             <?php endforeach; ?>
@@ -194,10 +212,10 @@ function getScoreBadgeClass($score) {
             <div class="moodle-modal-body">
                 <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #dee2e6; padding-bottom: 15px; margin-bottom: 20px;">
                     <div style="font-size: 15px;"><strong>Student ID:</strong> <span id="detailId"></span><br><strong>Evaluated By:</strong> <span id="detailAssessor" style="color:#555;"></span></div>
-                    <div style="font-size: 16px; text-align:right;"><strong>Final Weighted Score:</strong><br><span id="detailTotal" class="score-badge" style="font-size: 20px; padding: 6px 18px; margin-top: 5px;"></span> / 100</div>
+                    <div style="font-size: 16px; text-align:right;"><strong>Final Weighted Score:</strong><br><span id="detailTotal" class="score-badge" style="font-size: 20px; padding: 6px 18px; margin-top: 5px;"></span> / 100.00</div>
                 </div>
                 
-                <h4 style="margin-top: 0; color: #10263b;">Raw Component Scores (Out of 100)</h4>
+                <h4 style="margin-top: 0; color: #10263b;">Weighted Component Scores</h4>
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; margin-bottom: 25px;">
                     <ul style="column-count: 2; column-gap: 30px; margin: 0; padding-left: 20px; color: #555;">
                         <li style="margin-bottom: 8px;">Tasks/Projects: <strong class="detail-raw-score" id="detTask"></strong></li>
@@ -212,8 +230,7 @@ function getScoreBadgeClass($score) {
                 </div>
 
                 <h4 style="color: #10263b; margin-bottom: 10px;">Qualitative Comments</h4>
-                <div id="detailComments" style="background-color: #fcfbf9; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; min-height: 80px; color: #333; line-height: 1.5; white-space: pre-wrap;">
-                </div>
+                <div id="detailComments" style="background-color: #fcfbf9; padding: 15px; border-radius: 4px; border: 1px solid #e1e1e1; min-height: 80px; color: #333; line-height: 1.5; white-space: pre-wrap;"></div>
             </div>
             <div class="moodle-modal-footer">
                 <button id="closeDetailsBtn" class="moodle-btn-submit" style="margin-top:0; background-color: #6c757d;">Close</button>
@@ -221,122 +238,119 @@ function getScoreBadgeClass($score) {
         </div>
     </div>
 
-    <div id="rubricModal" class="moodle-modal-overlay">
-        <div class="moodle-modal-box" style="max-width: 650px;">
-            <div class="moodle-modal-header">
-                <h2>Admin Help & Grading Rubric</h2>
-                <span class="moodle-close-x" id="closeRubricModalX">&times;</span>
-            </div>
-            <div class="moodle-modal-body">
-                <div style="background-color: #e8f0fe; border-left: 4px solid #10263b; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
-                    <strong style="color: #10263b; font-size: 16px;">Need Assistance?</strong><br>
-                    <span style="color: #555; font-size: 14px;">If you encounter unexpected behavior, system crashes, issues with deleting linked records, or need database maintenance, please contact:</span>
-                    <div style="margin-top: 8px;">
-                        &#128100; <a href="https://www.nottingham.edu.my/computer-mathematical-sciences/People/chyecheah.tan" target="_blank" class="admin-link">TAN CHYE CHEAH</a><br>
-                        &#9993; <a href="mailto:ChyeCheah.Tan@nottingham.edu.my" class="admin-link">ChyeCheah.Tan@nottingham.edu.my</a>
-                    </div>
-                </div>
-
-                <p><strong>System Guidelines & Potential Issues:</strong></p>
-                <ul style="color: #555; margin-bottom: 15px; font-size: 14px;">
-                    <li><strong>Record Deletion:</strong> You cannot delete a student or assessor if they have existing internship records linked to them.</li>
-                    <li><strong>Duplicate Entries:</strong> The system prevents adding users or students with IDs/Usernames that already exist.</li>
-                    <li><strong>Data Integrity:</strong> All modifications are permanently saved to maintain accurate internship records.</li>
-                </ul>
-
-                <p><strong>Reference: Assessment Weightages (Fixed):</strong></p>
-                <div style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 20px;">
-                    <ul style="column-count: 2; column-gap: 20px; margin: 0; padding-left: 20px; color: #333; font-size: 14px;">
-                        <li style="margin-bottom: 8px;">Tasks/Projects: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Health & Safety: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Connectivity/Theory: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Report Presentation: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Clarity of Language: <strong>10%</strong></li>
-                        <li style="margin-bottom: 8px;">Lifelong Learning: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Project Management: <strong>15%</strong></li>
-                        <li style="margin-bottom: 8px;">Time Management: <strong>15%</strong></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="moodle-modal-footer">
-                <button id="closeRubricModalBtn" class="moodle-btn-submit" style="margin-top:0; padding: 8px 20px;">Close</button>
-            </div>
-        </div>
-    </div>
+    <?php include 'admin_help_modal.php'; ?>
 
     <script>
-        // view details modal logic
         var detailsModal = document.getElementById("studentDetailsModal");
-        document.querySelectorAll('.evaluated-row').forEach(row => {
-            row.addEventListener('dblclick', function() {
+        var tableRows = document.getElementsByClassName('evaluated-row');
+        
+        for (var i = 0; i < tableRows.length; i++) {
+            tableRows[i].addEventListener('dblclick', function() {
                 document.getElementById('detailStudentName').innerText = this.getAttribute('data-name');
                 document.getElementById('detailId').innerText = this.getAttribute('data-id');
                 document.getElementById('detailAssessor').innerText = this.getAttribute('data-assessor');
-                const totalScore = parseFloat(this.getAttribute('data-total'));
-                const totalEl = document.getElementById('detailTotal');
-                totalEl.innerText = this.getAttribute('data-total');
-                totalEl.classList.remove('score-merit', 'score-pass', 'score-fail');
-                if (totalScore >= 70) totalEl.classList.add('score-merit');
-                else if (totalScore >= 50) totalEl.classList.add('score-pass');
-                else totalEl.classList.add('score-fail');
                 
-                document.getElementById('detTask').innerText = parseFloat(this.getAttribute('data-task')).toFixed(2) + '/10.00';
-                document.getElementById('detHealth').innerText = parseFloat(this.getAttribute('data-health')).toFixed(2) + '/10.00';
-                document.getElementById('detConn').innerText = parseFloat(this.getAttribute('data-conn')).toFixed(2) + '/10.00';
-                document.getElementById('detReport').innerText = parseFloat(this.getAttribute('data-report')).toFixed(2) + '/15.00';
-                document.getElementById('detClarity').innerText = parseFloat(this.getAttribute('data-clarity')).toFixed(2) + '/10.00';
-                document.getElementById('detLife').innerText = parseFloat(this.getAttribute('data-life')).toFixed(2) + '/15.00';
-                document.getElementById('detProj').innerText = parseFloat(this.getAttribute('data-proj')).toFixed(2) + '/15.00';
-                document.getElementById('detTime').innerText = parseFloat(this.getAttribute('data-time')).toFixed(2) + '/15.00';
+                var totalScore = parseFloat(this.getAttribute('data-total'));
+                var totalEl = document.getElementById('detailTotal');
+                totalEl.innerText = this.getAttribute('data-total');
+                
+                totalEl.className = 'score-badge';
+                if (totalScore >= 70) totalEl.className += ' score-tier-1';
+                else if (totalScore >= 60) totalEl.className += ' score-tier-2';
+                else if (totalScore >= 50) totalEl.className += ' score-tier-3';
+                else if (totalScore >= 40) totalEl.className += ' score-tier-4';
+                else totalEl.className += ' score-tier-5';
+                
+                document.getElementById('detTask').innerText = (parseFloat(this.getAttribute('data-task')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detHealth').innerText = (parseFloat(this.getAttribute('data-health')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detConn').innerText = (parseFloat(this.getAttribute('data-conn')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detReport').innerText = (parseFloat(this.getAttribute('data-report')) * 0.15).toFixed(2) + '/15.00';
+                document.getElementById('detClarity').innerText = (parseFloat(this.getAttribute('data-clarity')) * 0.10).toFixed(2) + '/10.00';
+                document.getElementById('detLife').innerText = (parseFloat(this.getAttribute('data-life')) * 0.15).toFixed(2) + '/15.00';
+                document.getElementById('detProj').innerText = (parseFloat(this.getAttribute('data-proj')) * 0.15).toFixed(2) + '/15.00';
+                document.getElementById('detTime').innerText = (parseFloat(this.getAttribute('data-time')) * 0.15).toFixed(2) + '/15.00';
                 
                 document.getElementById('detailComments').innerText = this.getAttribute('data-comments');
                 
                 detailsModal.style.display = "flex";
             });
-        });
-
-        document.getElementById("closeDetailsX").onclick = function() { detailsModal.style.display = "none"; }
-        document.getElementById("closeDetailsBtn").onclick = function() { detailsModal.style.display = "none"; }
-
-        // Help & Rubric 
-        var rubricModal = document.getElementById("rubricModal");
-        var openRubricBtn = document.getElementById("openRubricModalBtn");
-        var closeRubricX = document.getElementById("closeRubricModalX");
-        var closeRubricBtn = document.getElementById("closeRubricModalBtn");
-        
-        if(openRubricBtn) openRubricBtn.onclick = function() { rubricModal.style.display = "flex"; }
-        if(closeRubricX) closeRubricX.onclick = function() { rubricModal.style.display = "none"; }
-        if(closeRubricBtn) closeRubricBtn.onclick = function() { rubricModal.style.display = "none"; }
-
-        // Close modals when clicking outside the modal box
-        window.onclick = function(event) { 
-            if (event.target == detailsModal) detailsModal.style.display = "none"; 
-            if (event.target == rubricModal) rubricModal.style.display = "none";
         }
 
-        // search filter 
+        document.getElementById("closeDetailsX").onclick = function() { detailsModal.style.display = "none"; };
+        document.getElementById("closeDetailsBtn").onclick = function() { detailsModal.style.display = "none"; };
+
         function filterResults() {
-            let f = document.getElementById('searchInput').value.toUpperCase();
-            document.querySelectorAll('#resultsTable tbody tr').forEach(r => {
-                r.style.display = r.innerText.toUpperCase().indexOf(f) > -1 ? "" : "none";
-            });
+            var input = document.getElementById('searchInput');
+            var filter = input.value.toUpperCase();
+            var table = document.getElementById("resultsTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var rowText = tr[i].innerText.toUpperCase();
+                if (rowText.indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
         }
 
-        // sorting 
-        let curCol = -1, curDir = 'asc';
+        var curCol = -1;
+        var curDir = 'asc';
+        
         function sortTable(idx, type) {
-            const table = document.getElementById("resultsTable");
-            const rows = Array.from(table.tBodies[0].rows);
-            let dir = (curCol === idx && curDir === 'asc') ? 'desc' : 'asc';
-            document.querySelectorAll('.sort-icons span').forEach(s => s.classList.remove('active-sort'));
-            table.querySelectorAll("th")[idx].querySelector(dir === 'asc' ? '.up' : '.down').classList.add('active-sort');
-            curCol = idx; curDir = dir;
-            rows.sort((a, b) => {
-                let vA = a.cells[idx].innerText, vB = b.cells[idx].innerText;
-                if(type === 'num') return dir === 'asc' ? parseFloat(vA) - parseFloat(vB) : parseFloat(vB) - parseFloat(vA);
-                return dir === 'asc' ? vA.localeCompare(vB) : vB.localeCompare(vA);
+            var table = document.getElementById("resultsTable");
+            var tbody = table.getElementsByTagName("tbody")[0];
+            var rows = tbody.getElementsByTagName("tr");
+            var rowsArray = [];
+            
+            for (var i = 0; i < rows.length; i++) {
+                rowsArray.push(rows[i]);
+            }
+
+            var dir = (curCol === idx && curDir === 'asc') ? 'desc' : 'asc';
+            
+            var icons = document.querySelectorAll('.sort-icons span');
+            for (var j = 0; j < icons.length; j++) {
+                icons[j].className = icons[j].className.replace(" active-sort", "");
+            }
+            
+            var targetIcon = table.getElementsByTagName("th")[idx].querySelector(dir === 'asc' ? '.up' : '.down');
+            if (targetIcon) {
+                targetIcon.className += " active-sort";
+            }
+
+            curCol = idx;
+            curDir = dir;
+
+            rowsArray.sort(function(a, b) {
+                var vA = a.getElementsByTagName("td")[idx].innerText;
+                var vB = b.getElementsByTagName("td")[idx].innerText;
+                
+                if (type === 'num') {
+                    vA = parseFloat(vA);
+                    vB = parseFloat(vB);
+                    if (dir === 'asc') {
+                        return vA - vB;
+                    } else {
+                        return vB - vA;
+                    }
+                } else {
+                    vA = vA.toLowerCase();
+                    vB = vB.toLowerCase();
+                    if (vA < vB) {
+                        return dir === 'asc' ? -1 : 1;
+                    }
+                    if (vA > vB) {
+                        return dir === 'asc' ? 1 : -1;
+                    }
+                    return 0;
+                }
             });
-            rows.forEach(r => table.tBodies[0].appendChild(r));
+
+            for (var k = 0; k < rowsArray.length; k++) {
+                tbody.appendChild(rowsArray[k]);
+            }
         }
     </script>
 </body>
