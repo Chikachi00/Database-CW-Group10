@@ -50,8 +50,8 @@ INSERT INTO `Assessments` (`assessment_id`, `internship_id`, `task_score`, `heal
 (1, 1, 9.00, 9.50, 9.00, 14.00, 9.00, 14.00, 14.00, 14.00, 92.50, 'Alice demonstrated outstanding technical skills and adapted perfectly to the company culture. Highly recommended.'),
 (2, 2, 7.00, 8.00, 7.50, 11.00, 7.00, 10.50, 12.00, 11.00, 74.00, 'Bob completed the tasks adequately, but needs to improve his communication skills and time management.'),
 (3, 4, 8.50, 9.00, 8.00, 13.00, 8.50, 12.00, 13.00, 12.50, 84.50, 'Diana is a fast learner and contributed well to the cloud architecture project. Good overall performance.'),
-(4, 5, 55.00, 60.00, 58.00, 62.00, 55.00, 60.00, 58.00, 60.00, 58.50, 'Evan showed basic understanding of data analytics concepts but struggled with independent problem-solving. Improvement needed in time management and project delivery.'),
-(5, 6, 40.00, 45.00, 40.00, 42.00, 40.00, 45.00, 42.00, 45.00, 42.50, 'Frank did not meet the expected standard. Frequent absence, poor engagement with assigned tasks, and weak technical foundation. Requires significant improvement.');
+(4, 5, 5.50, 6.00, 5.80, 6.20, 5.50, 6.00, 5.80, 6.00, 58.50, 'Evan showed basic understanding of data analytics concepts but struggled with independent problem-solving. Improvement needed in time management and project delivery.'),
+(5, 6, 4.00, 4.50, 4.00, 4.20, 4.00, 4.50, 4.20, 4.50, 42.50, 'Frank did not meet the expected standard. Frequent absence, poor engagement with assigned tasks, and weak technical foundation. Requires significant improvement.');
 
 -- --------------------------------------------------------
 

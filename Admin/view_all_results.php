@@ -167,15 +167,15 @@ function getScoreBadgeClass($score) {
                                     <td><?= htmlspecialchars($row['student_id']) ?></td>
                                     <td><strong><?= htmlspecialchars($row['student_name']) ?></strong></td>
                                     <td><span style="background-color:#e8f0fe; padding:4px 8px; border-radius:4px; font-size:12px; color:#10263b;"><?= htmlspecialchars($row['assessor_name']) ?></span></td>
-                                    <td><?= number_format($row['task_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['health_safety_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['connectivity_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['report_score'] * 0.15, 2) ?></td>
-                                    <td><?= number_format($row['clarity_score'] * 0.10, 2) ?></td>
-                                    <td><?= number_format($row['lifelong_score'] * 0.15, 2) ?></td>
-                                    <td><?= number_format($row['project_mgmt_score'] * 0.15, 2) ?></td>
-                                    <td><?= number_format($row['time_mgmt_score'] * 0.15, 2) ?></td>
-                                    <td><span class="score-badge <?= getScoreBadgeClass($row['total_score']) ?>"><?= number_format($row['total_score'], 2) ?></span></td>
+                                    <td><?= number_format($row['task_score'], 2) ?>/10</td>
+                                    <td><?= number_format($row['health_safety_score'], 2) ?>/10</td>
+                                    <td><?= number_format($row['connectivity_score'], 2) ?>/10</td>
+                                    <td><?= number_format($row['report_score'], 2) ?>/15</td>
+                                    <td><?= number_format($row['clarity_score'], 2) ?>/10</td>
+                                    <td><?= number_format($row['lifelong_score'], 2) ?>/15</td>
+                                    <td><?= number_format($row['project_mgmt_score'], 2) ?>/15</td>
+                                    <td><?= number_format($row['time_mgmt_score'], 2) ?>/15</td>
+                                    <td><span class="score-badge <?= getScoreBadgeClass($row['total_score']) ?>"><?= number_format($row['total_score'], 2) ?></span> / 100.00</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -280,14 +280,14 @@ function getScoreBadgeClass($score) {
                 else if (totalScore >= 50) totalEl.classList.add('score-pass');
                 else totalEl.classList.add('score-fail');
                 
-                document.getElementById('detTask').innerText = this.getAttribute('data-task');
-                document.getElementById('detHealth').innerText = this.getAttribute('data-health');
-                document.getElementById('detConn').innerText = this.getAttribute('data-conn');
-                document.getElementById('detReport').innerText = this.getAttribute('data-report');
-                document.getElementById('detClarity').innerText = this.getAttribute('data-clarity');
-                document.getElementById('detLife').innerText = this.getAttribute('data-life');
-                document.getElementById('detProj').innerText = this.getAttribute('data-proj');
-                document.getElementById('detTime').innerText = this.getAttribute('data-time');
+                document.getElementById('detTask').innerText = parseFloat(this.getAttribute('data-task')).toFixed(2) + '/10';
+                document.getElementById('detHealth').innerText = parseFloat(this.getAttribute('data-health')).toFixed(2) + '/10';
+                document.getElementById('detConn').innerText = parseFloat(this.getAttribute('data-conn')).toFixed(2) + '/10';
+                document.getElementById('detReport').innerText = parseFloat(this.getAttribute('data-report')).toFixed(2) + '/15';
+                document.getElementById('detClarity').innerText = parseFloat(this.getAttribute('data-clarity')).toFixed(2) + '/10';
+                document.getElementById('detLife').innerText = parseFloat(this.getAttribute('data-life')).toFixed(2) + '/15';
+                document.getElementById('detProj').innerText = parseFloat(this.getAttribute('data-proj')).toFixed(2) + '/15';
+                document.getElementById('detTime').innerText = parseFloat(this.getAttribute('data-time')).toFixed(2) + '/15';
                 
                 document.getElementById('detailComments').innerText = this.getAttribute('data-comments');
                 
