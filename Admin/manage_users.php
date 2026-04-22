@@ -15,7 +15,7 @@ $error_msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_user'])) {
     $new_username = $_POST['username'];
-    $new_password = $_POST['password']; 
+    $new_password = password_hash($_POST['password'], PASSWORD_DEFAULT); 
     try {
         $stmt = $pdo->prepare("INSERT INTO Users (username, password, role) VALUES (:user, :pass, 'Assessor')");
         $stmt->execute(['user' => $new_username, 'pass' => $new_password]);
@@ -34,7 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_user'])) {
     try {
         if ($new_password !== '') {
             $stmt = $pdo->prepare("UPDATE Users SET username = :user, password = :pass WHERE user_id = :id AND role = 'Assessor'");
-            $stmt->execute(['user' => $new_username, 'pass' => $new_password, 'id' => $update_id]);
+            $hashed = password_hash($new_password, PASSWORD_DEFAULT);
+            $stmt->execute(['user' => $new_username, 'pass' => $hashed, 'id' => $update_id]);
         } else {
             $stmt = $pdo->prepare("UPDATE Users SET username = :user WHERE user_id = :id AND role = 'Assessor'");
             $stmt->execute(['user' => $new_username, 'id' => $update_id]);
