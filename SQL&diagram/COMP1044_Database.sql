@@ -40,7 +40,7 @@ CREATE TABLE `Assessments` (
   `time_mgmt_score` decimal(5,2) NOT NULL,
   `total_score` decimal(5,2) NOT NULL,
   `qualitative_comments` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- 转存表中的数据 `Assessments`
@@ -65,7 +65,7 @@ CREATE TABLE `Internships` (
   `assessor_id` int NOT NULL,
   `company_name` varchar(150) NOT NULL,
   `other_details` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- 转存表中的数据 `Internships`
@@ -89,7 +89,7 @@ CREATE TABLE `Students` (
   `student_id` varchar(20) NOT NULL,
   `student_name` varchar(100) NOT NULL,
   `programme` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- 转存表中的数据 `Students`
@@ -114,7 +114,7 @@ CREATE TABLE `Users` (
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('Admin','Assessor') NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- 转存表中的数据 `Users`
