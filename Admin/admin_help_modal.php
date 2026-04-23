@@ -49,7 +49,6 @@
 </div>
 
 <script>
-    // 立即执行脚本：绝不死机，强制绑定点击事件
     (function() {
         var forceBindEvents = function() {
             var modal = document.getElementById("rubricModal");
@@ -57,7 +56,6 @@
             var closeX = document.getElementById("closeRubricModalX");
             var closeBtn = document.getElementById("closeRubricModalBtn");
 
-            // 强制覆盖 onclick 确保生效
             if (openBtn && modal) {
                 openBtn.onclick = function(e) {
                     e.preventDefault();
@@ -71,7 +69,6 @@
                 closeBtn.onclick = function() { modal.style.display = "none"; };
             }
             
-            // 点击外部阴影关闭
             window.addEventListener("click", function(event) {
                 if (modal && event.target === modal) {
                     modal.style.display = "none";
@@ -79,7 +76,6 @@
             });
         };
 
-        // 双保险：加载完或者正在加载，都能准确绑定
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", forceBindEvents);
         } else {

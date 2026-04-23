@@ -246,18 +246,18 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
         var closeDeleteX = document.getElementById("closeDeleteX");
         var cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
 
-        // 打开弹窗并接收动态的删除链接和文本内容
+        // open delete confirmation modal with dynamic message and link
         function showDeleteModal(deleteUrl, messageText) {
             deleteMessage.innerText = messageText;
             confirmDeleteLink.href = deleteUrl; // 动态赋予删除链接
             deleteModal.style.display = "flex";
         }
 
-        // 关闭弹窗逻辑
+        // close modal on X or Cancel
         if(closeDeleteX) { closeDeleteX.onclick = function() { deleteModal.style.display = "none"; } }
         if(cancelDeleteBtn) { cancelDeleteBtn.onclick = function() { deleteModal.style.display = "none"; } }
 
-        // 点击背景阴影关闭弹窗（因为你之前的 window.onclick 会被覆盖，这里用 addEventListener 更安全）
+        // close modal when clicking outside the box
         window.addEventListener('click', function(event) {
             if (event.target == deleteModal) {
                 deleteModal.style.display = "none";

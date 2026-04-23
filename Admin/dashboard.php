@@ -79,7 +79,7 @@ $recent = $pdo->query($sql_recent)->fetchAll(PDO::FETCH_ASSOC);
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
 
-        /* 注意这里的 max-width 已经统一改成了 550px */
+        /*max-width 550px */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 550px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }

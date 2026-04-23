@@ -11,7 +11,6 @@ if (isset($_SESSION['user_id'])) {
         header("Location: Admin/dashboard.php");
         exit();
     } else if ($_SESSION['role'] === 'Assessor') {
-        // 修改1：已经登录的情况下，默认跳转到 assessor_dashboard
         header("Location: Assessor/assessor_dashboard.php");
         exit();
     }
@@ -47,7 +46,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($user['role'] === 'Admin') {
                 header("Location: Admin/dashboard.php");
             } else {
-                // 修改2：刚输入完密码登录成功后，跳转到 assessor_dashboard
                 header("Location: Assessor/assessor_dashboard.php");
             }
             exit();

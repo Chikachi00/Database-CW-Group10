@@ -163,7 +163,7 @@ function getScoreBadgeClass($score) {
         .sort-icons { display: flex; flex-direction: column; font-size: 9px; margin-left: 8px; color: #ced4da; }
         .active-sort { color: #7a327e; }
 
-        /* Modal Styles - 增加了 backdrop-filter: blur(3px); */
+        /* backdrop-filter: blur(3px) */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 650px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -183,7 +183,7 @@ function getScoreBadgeClass($score) {
         
         .detail-raw-score { font-size: 16px; color: #10263b; }
         
-        /* 5-Tier Score Grade Badges (Unified Pastel/Muted Colors) */
+        /* 5-Tier Score Grade Badges */
         .score-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px; min-width: 60px; text-align: center; border: 1px solid transparent; }
         .score-tier-1 { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; }
         .score-tier-2 { background-color: #e0e7ff; color: #1e3a8a; border-color: #c7d2fe; }
@@ -351,7 +351,7 @@ function getScoreBadgeClass($score) {
                 else if (totalScore >= 40) totalEl.className += ' score-tier-4';
                 else totalEl.className += ' score-tier-5';
                 
-                // JS 里获取原分，再乘以对应的权重比例
+                // Calculate and display weighted component scores
                 document.getElementById('detTask').innerText = (parseFloat(this.getAttribute('data-task')) * 0.10).toFixed(2) + '/10.00';
                 document.getElementById('detHealth').innerText = (parseFloat(this.getAttribute('data-health')) * 0.10).toFixed(2) + '/10.00';
                 document.getElementById('detConn').innerText = (parseFloat(this.getAttribute('data-conn')) * 0.10).toFixed(2) + '/10.00';
@@ -434,11 +434,10 @@ function getScoreBadgeClass($score) {
             }
         }
 
-        var rubricModal = document.getElementById("rubricModal"); // 注意这个在包含的文件里，或者如果在其他逻辑里可能会被覆盖，由于引入了外部modal，这个变量依然能找到对应的ID
+        var rubricModal = document.getElementById("rubricModal"); 
         var openRubricBtn = document.getElementById("openRubricModalBtn");
         var closeRubricX = document.getElementById("closeRubricModalX");
         
-        // 这里的 onclick 可能会和 assessor_help_modal.php 里的 listener 重复，但无妨。如果觉得冗余，你也可以删掉。这里为你保留原有逻辑。
         if(openRubricBtn) openRubricBtn.onclick = function() { rubricModal = document.getElementById("rubricModal"); if(rubricModal) rubricModal.style.display = "flex"; }
         if(closeRubricX) closeRubricX.onclick = function() { rubricModal = document.getElementById("rubricModal"); if(rubricModal) rubricModal.style.display = "none"; }
 

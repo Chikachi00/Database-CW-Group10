@@ -102,7 +102,7 @@ $internships = $pdo->query($sql)->fetchAll();
         .btn-danger:hover { background-color: #c82333; }
         .moodle-form-label { display: block; font-weight: bold; margin-bottom: 8px; color: #1d2125; font-size: 14px; }
         
-        /* 注意这里的 max-width 已经统一改成了 550px */
+        /*max-width  550px */
         .moodle-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(67, 83, 99, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .moodle-modal-box { background-color: #ffffff; width: 90%; max-width: 550px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .moodle-modal-header { padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
@@ -257,18 +257,18 @@ $internships = $pdo->query($sql)->fetchAll();
         var closeDeleteX = document.getElementById("closeDeleteX");
         var cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
 
-        // 打开弹窗并接收动态的删除链接和文本内容
+        // open delete confirmation modal with dynamic message and link
         function showDeleteModal(deleteUrl, messageText) {
             deleteMessage.innerText = messageText;
-            confirmDeleteLink.href = deleteUrl; // 动态赋予删除链接
+            confirmDeleteLink.href = deleteUrl; 
             deleteModal.style.display = "flex";
         }
 
-        // 关闭弹窗逻辑
+        // close modal on X or Cancel
         if(closeDeleteX) { closeDeleteX.onclick = function() { deleteModal.style.display = "none"; } }
         if(cancelDeleteBtn) { cancelDeleteBtn.onclick = function() { deleteModal.style.display = "none"; } }
 
-        // 点击背景阴影关闭弹窗（因为你之前的 window.onclick 会被覆盖，这里用 addEventListener 更安全）
+        // close modal when clicking outside the box
         window.addEventListener('click', function(event) {
             if (event.target == deleteModal) {
                 deleteModal.style.display = "none";

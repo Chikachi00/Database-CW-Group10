@@ -41,7 +41,7 @@
 </div>
 
 <script>
-    // 独立封装的事件监听，防止干扰主文件逻辑
+    // Ensure event listeners are bound after DOM is fully loaded
     document.addEventListener("DOMContentLoaded", function() {
         var rubricModal = document.getElementById("rubricModal");
         var openRubricBtn = document.getElementById("openRubricModalBtn");
