@@ -149,7 +149,7 @@ function getScoreBadgeClass($score) {
                     <table class="moodle-table" id="resultsTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0, 'str')"><div class="th-content">ID <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(0, 'str')"><div class="th-content">Student ID <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(1, 'str')"><div class="th-content">Name <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(2, 'str')"><div class="th-content">Assessor <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(3, 'num')"><div class="th-content">Tasks <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
@@ -157,9 +157,9 @@ function getScoreBadgeClass($score) {
                                 <th onclick="sortTable(5, 'num')"><div class="th-content">Theory <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(6, 'num')"><div class="th-content">Report <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(7, 'num')"><div class="th-content">Clarity <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(8, 'num')"><div class="th-content">Life <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(9, 'num')"><div class="th-content">Proj <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
-                                <th onclick="sortTable(10, 'num')"><div class="th-content">Time <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(8, 'num')"><div class="th-content">Lifelong <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(9, 'num')"><div class="th-content">Proj. Mgmt <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
+                                <th onclick="sortTable(10, 'num')"><div class="th-content">Time Mgmt <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                                 <th onclick="sortTable(11, 'num')" style="min-width: 90px; padding-right: 10px;"><div class="th-content">Final Score <div class="sort-icons"><span class="up">▲</span><span class="down">▼</span></div></div></th>
                             </tr>
                         </thead>
