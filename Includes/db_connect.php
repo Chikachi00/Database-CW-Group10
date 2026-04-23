@@ -1,7 +1,7 @@
 <?php
 // Includes/db_connect.php
 $host = 'localhost';
-$dbname = 'COMP1044_CW_DB'; 
+$dbname = 'COMP1044_database'; 
 $username = 'root';         
 $password = 'root';           
 
