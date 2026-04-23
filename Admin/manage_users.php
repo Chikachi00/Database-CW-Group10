@@ -221,7 +221,7 @@ $assessors = $stmt->fetchAll(PDO::FETCH_ASSOC);
         // open delete confirmation modal with dynamic message and link
         function showDeleteModal(deleteUrl, messageText) {
             deleteMessage.innerText = messageText;
-            confirmDeleteLink.href = deleteUrl; // 动态赋予删除链接
+            confirmDeleteLink.href = deleteUrl; 
             deleteModal.style.display = "flex";
         }
 
