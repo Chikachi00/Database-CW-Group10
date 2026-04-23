@@ -139,8 +139,8 @@ Logging in as `Dr_smith` will show a red "Evaluate [1]" badge in the navigation 
 
 ---
 
-## 👥 Team Members (Group X) ⚠️ 记得改成实际组号
+## 👥 Team Members (Group 10)
 
-* **[Lin Yiwei]** — Database Architect & Full-stack Logic (ERD, SQL, Core PHP integration)
-* **[Deng Changhui]** — ⚠️ 补上职责
-* **[Cao Shiyu]** — Back-End Development (PHP logic, authentication, data handling)
+* **[Lin Yiwei]** 
+* **[Deng Changhui]** 
+* **[Cao Shiyu]** 
