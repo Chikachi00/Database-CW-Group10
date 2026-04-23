@@ -10,8 +10,10 @@ require_once '../Includes/db_connect.php';
 $username = $_SESSION['username'];
 $initial = strtoupper(substr($username, 0, 1)); 
 
-$success_msg = '';
-$error_msg = '';
+// Read and clear flash messages from session (shown once, then gone)
+$success_msg = $_SESSION['flash_success'] ?? '';
+$error_msg   = $_SESSION['flash_error']   ?? '';
+unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 // Add Internship Assignment
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['assign_internship'])) {
@@ -27,10 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['assign_internship'])) 
         $stmt->bindParam(':comp', $company);
         $stmt->bindParam(':det', $details);
         $stmt->execute();
-        $success_msg = "Internship assigned successfully!";
+        $_SESSION['flash_success'] = "Internship assigned successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Error assigning internship. Student might already be assigned.";
+        $_SESSION['flash_error'] = "Error assigning internship. Student might already be assigned.";
     }
+    header("Location: manage_internships.php");
+    exit();
 }
 
 // Update internship details
@@ -47,10 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_internship'])) 
         $stmt->bindParam(':det', $new_details);
         $stmt->bindParam(':id', $update_id);
         $stmt->execute();
-        $success_msg = "Internship details updated successfully!";
+        $_SESSION['flash_success'] = "Internship details updated successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Error updating internship details.";
+        $_SESSION['flash_error'] = "Error updating internship details.";
     }
+    header("Location: manage_internships.php");
+    exit();
 }
 
 // Delete internship assignment
@@ -60,15 +66,12 @@ if (isset($_GET['delete_id'])) {
         $stmt = $pdo->prepare("DELETE FROM Internships WHERE internship_id = :id");
         $stmt->bindParam(':id', $del_id);
         $stmt->execute();
-        header("Location: manage_internships.php?deleted=1"); 
-        exit();
+        $_SESSION['flash_success'] = "Internship assignment deleted successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Cannot delete internship. An assessment record might already be linked to it.";
+        $_SESSION['flash_error'] = "Cannot delete internship. An assessment record might already be linked to it.";
     }
-}
-
-if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
-    $success_msg = "Internship assignment deleted successfully!";
+    header("Location: manage_internships.php");
+    exit();
 }
 
 $students = $pdo->query("SELECT student_id, student_name FROM Students")->fetchAll();

@@ -13,8 +13,10 @@ require_once '../Includes/db_connect.php';
 $username = $_SESSION['username'];
 $initial = strtoupper(substr($username, 0, 1)); 
 
-$success_msg = '';
-$error_msg = '';
+// Read and clear flash messages from session (shown once, then gone)
+$success_msg = $_SESSION['flash_success'] ?? '';
+$error_msg   = $_SESSION['flash_error']   ?? '';
+unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     $student_id = trim($_POST['student_id']);
@@ -24,10 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     try {
         $stmt = $pdo->prepare("INSERT INTO Students (student_id, student_name, programme) VALUES (:id, :name, :prog)");
         $stmt->execute(['id' => $student_id, 'name' => $student_name, 'prog' => $programme]);
-        $success_msg = "Student added successfully!";
+        $_SESSION['flash_success'] = "Student added successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Error adding student: ID might already exist in the system.";
+        $_SESSION['flash_error'] = "Error adding student: ID might already exist in the system.";
     }
+    header("Location: manage_students.php");
+    exit();
 }
 
 // Update student details
@@ -39,26 +43,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_student'])) {
     try {
         $stmt = $pdo->prepare("UPDATE Students SET student_name = :name, programme = :prog WHERE student_id = :id");
         $stmt->execute(['name' => $new_name, 'prog' => $new_prog, 'id' => $update_id]);
-        $success_msg = "Student details updated successfully!";
+        $_SESSION['flash_success'] = "Student details updated successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Error updating student details.";
+        $_SESSION['flash_error'] = "Error updating student details.";
     }
+    header("Location: manage_students.php");
+    exit();
 }
 
 if (isset($_GET['delete_id'])) {
     try {
         $stmt = $pdo->prepare("DELETE FROM Students WHERE student_id = :id");
         $stmt->execute(['id' => $_GET['delete_id']]);
-        header("Location: manage_students.php?deleted=1"); 
-        exit();
+        $_SESSION['flash_success'] = "Student deleted successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Cannot delete student. They might have internship records linked to them.";
+        $_SESSION['flash_error'] = "Cannot delete student. They might have internship records linked to them.";
     }
-}
-
-// Show success message after successful deletion redirect
-if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
-    $success_msg = "Student deleted successfully!";
+    header("Location: manage_students.php");
+    exit();
 }
 
 // Fetch all unique programmes for the filter dropdown
