@@ -10,8 +10,10 @@ require_once '../Includes/db_connect.php';
 $username = $_SESSION['username'];
 $initial = strtoupper(substr($username, 0, 1)); 
 
-$success_msg = '';
-$error_msg = '';
+// Read and clear flash messages from session (shown once, then gone)
+$success_msg = $_SESSION['flash_success'] ?? '';
+$error_msg   = $_SESSION['flash_error']   ?? '';
+unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_user'])) {
     $new_username = $_POST['username'];
@@ -19,10 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_user'])) {
     try {
         $stmt = $pdo->prepare("INSERT INTO Users (username, password, role) VALUES (:user, :pass, 'Assessor')");
         $stmt->execute(['user' => $new_username, 'pass' => $new_password]);
-        $success_msg = "Assessor added successfully!";
+        $_SESSION['flash_success'] = "Assessor added successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Error: Username might already exist.";
+        $_SESSION['flash_error'] = "Error: Username might already exist.";
     }
+    header("Location: manage_users.php");
+    exit();
 }
 
 // Update assessor details (password is optional - leave blank to keep the current one)
@@ -40,10 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_user'])) {
             $stmt = $pdo->prepare("UPDATE Users SET username = :user WHERE user_id = :id AND role = 'Assessor'");
             $stmt->execute(['user' => $new_username, 'id' => $update_id]);
         }
-        $success_msg = "Assessor details updated successfully!";
+        $_SESSION['flash_success'] = "Assessor details updated successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Error updating assessor: Username might already exist.";
+        $_SESSION['flash_error'] = "Error updating assessor: Username might already exist.";
     }
+    header("Location: manage_users.php");
+    exit();
 }
 
 // Delete assessor account
@@ -51,16 +57,12 @@ if (isset($_GET['delete_id'])) {
     try {
         $stmt = $pdo->prepare("DELETE FROM Users WHERE user_id = :id AND role = 'Assessor'");
         $stmt->execute(['id' => $_GET['delete_id']]);
-        header("Location: manage_users.php?deleted=1"); 
-        exit();
+        $_SESSION['flash_success'] = "Assessor deleted successfully!";
     } catch (PDOException $e) {
-        $error_msg = "Cannot delete assessor. They might have internship records linked to them.";
+        $_SESSION['flash_error'] = "Cannot delete assessor. They might have internship records linked to them.";
     }
-}
-
-// Show success message after successful deletion redirect
-if (isset($_GET['deleted']) && $_GET['deleted'] == '1') {
-    $success_msg = "Assessor deleted successfully!";
+    header("Location: manage_users.php");
+    exit();
 }
 
 $stmt = $pdo->query("SELECT * FROM Users WHERE role = 'Assessor' ORDER BY user_id DESC");
