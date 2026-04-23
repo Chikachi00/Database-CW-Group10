@@ -1,6 +1,9 @@
 <?php
 session_start();
-
+// Test Accounts (Plaintext Passwords for Reference)
+// admin       -> admin123
+// Dr_smith    -> smith123
+// Prof_jones  -> jones123
 // if logged in, redirect based on role
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'Admin') {
