@@ -1,149 +1,118 @@
-# Internship Assessment System (COMP1044 Coursework)
+# Internship Assessment System — COMP1044 Group 10
 
-## 📌 Project Overview
-This project is a comprehensive Web-based Database Application designed to manage and evaluate student internships. It features a robust MySQL database backend and a responsive PHP/HTML/CSS frontend, ensuring reliable data handling, role-based access control, and automated score calculations.
+## 简介
 
-## ✨ Key Features
+这是我们为 COMP1044 课程作业开发的一个网页端实习成绩管理系统，用来替代过去那种用 Excel 表格手动记录、手动算分的方式。系统支持两种角色登录：Admin 负责管理学生、评审员和实习分配；Assessor（讲师/导师）负责给分和写评语，系统会自动按固定权重算出最终成绩。
 
-### 👑 Admin Module
-* **Admin Dashboard**: Overview page with real-time statistics (total students, assessors, internships, evaluations completed/pending, university average score) and a visual progress bar. Statistic cards are clickable shortcuts to the corresponding management pages.
-* **Manage Students**: Full CRUD operations — add, edit, delete student records. Includes **filtering by programme** for quick lookup.
-* **Manage Assessors**: Full CRUD operations for assessor accounts, with optional password reset during editing.
-* **Manage Internships**: Assign students to assessors, with full edit/delete support for existing assignments.
-* **Global Result Viewing**: Access all students' evaluation results across the system with search, sort, and detailed view.
-* **Color-coded Grade Badges**: Final scores are visually categorized — green (Merit, 70+), blue (Pass, 50–69), and red (Fail, below 50) — for quick visual identification of student performance.
-* **Export to CSV**: One-click export of all evaluation results to a CSV file for external reporting or archival.
-
-### 🧑‍🏫 Assessor Module
-* **Student Evaluation**: Input marks based on 8 strict assessment criteria (e.g., Task Performance, Report Presentation, Time Management).
-* **Auto-Calculation**: The system automatically aggregates the 8 sub-scores into a final total score (out of 100) based on fixed weightages, minimizing human calculation errors.
-* **Pending Evaluations Badge**: Navigation bar displays a red badge showing the number of students still awaiting evaluation, updating in real-time as evaluations are submitted.
-* **Qualitative Comments**: Provide text-based feedback to justify the assigned scores.
-* **Personalized View**: Assessors can only view and evaluate students specifically assigned to them.
-* **Class Average Display**: Assessors can see the average score of students they have evaluated.
-
-### 🔍 System-Wide Features
-* **Role-Based Authentication**: Secure login system directing Admins and Assessors to their respective dashboards.
-* **Remember Username**: Optional cookie-based username remembering for convenience (30-day expiry).
-* **Search & Filter**: Real-time searching by Student ID, Name, or Assessor across result pages; column sorting on tables.
-* **Data Validation**: 
-  - **Front-end**: HTML5 constraints (min/max, required), JavaScript validation for usernames, passwords, student IDs, company names.
-  - **Back-end**: Server-side validation of score ranges (0–100), required fields, and numeric types — protection against form tampering.
-* **SQL Injection Protection**: All database queries use PDO prepared statements.
-* **Referential Integrity**: Foreign key constraints prevent deletion of records that are referenced elsewhere (e.g., cannot delete a student who has an active internship record).
+数据库用 MySQL，前端是 HTML + CSS + JavaScript，后端是 PHP（PDO）。
 
 ---
 
-## 📂 Folder Structure
+## 功能说明
 
-```text
-COMP1044_CW_Gx/
- ┣ Admin/                        # Admin exclusive functional pages
- ┃  ┣ admin_help_modal.php       # Admin help/guide modal
- ┃  ┣ dashboard.php              # Admin overview with statistics
- ┃  ┣ export_results.php         # CSV export endpoint
- ┃  ┣ manage_internships.php     # Internship assignment CRUD
- ┃  ┣ manage_students.php        # Student CRUD + programme filter
- ┃  ┣ manage_users.php           # Assessor account CRUD
- ┃  ┗ view_all_results.php       # Global results view with color-coded grades
- ┣ Assessor/                     # Assessor exclusive functional pages
- ┃  ┣ assessor_dashboard.php     # Assessor overview page
- ┃  ┣ assessor_help_modal.php    # Assessor help/guide modal
- ┃  ┣ evaluate_student.php       # Score entry form
- ┃  ┗ submit_marks.php           # Submission handler + personal results view
- ┣ Includes/                     # Backend configurations and shared logic
- ┃  ┗ db_connect.php             # PDO Database connection script
- ┣ images/                       # Logo and static assets
- ┃  ┗ logo.png
- ┣ SQL&diagram/                  # Database deliverables
- ┃  ┣ COMP1044_Database.sql      # SQL script (DDL & DML with sample data)
- ┃  ┗ COMP1044_ERD.pdf           # Entity-Relationship Diagram (Crow's foot)
- ┣ login.php                     # System authentication gateway
- ┣ logout.php                    # Session destruction script
- ┣ style.css                     # Global stylesheet (Moodle-inspired design)
- ┗ README.md                     # Project documentation
+### Admin 端
+
+- **Dashboard**：登进去先看到统计概览，包括学生总数、评审员数、已评/待评人数、全校平均分，还有个进度条。卡片可以点击跳转到对应管理页面。
+- **学生管理**：增删改查，可以按专业筛选。
+- **评审员管理**：新增/编辑/删除评审员账号，编辑时密码可选填（留空则不修改）。
+- **实习分配**：把学生分配给对应评审员，记录公司名称和备注。
+- **成绩查看**：查看所有学生的详细分数，支持搜索、表头排序，双击行可弹出详情和评语。成绩按分段显示颜色标签（70+ 绿色、50–69 蓝色、低于 50 红色）。
+- **导出 CSV**：一键把所有评估结果导出为 CSV 文件。
+
+### Assessor 端
+
+- **Dashboard**：显示自己负责的学生数、已完成/待完成数量，以及自己给出的平均分。
+- **评分页面**：从下拉搜索中选学生，输入 8 项分数（0–100 的原始分），页面实时显示加权后的总分预览。提交前会弹出确认框，提交后不可修改。
+- **结果查看**：查看自己已评学生的明细分数，支持搜索和排序。
+
+### 通用功能
+
+- 登录后根据角色自动跳转到对应页面，非授权页面会重定向回登录页。
+- 所有数据库操作用 PDO prepared statements，防止 SQL 注入。
+- 前后端都有校验：前端限制输入格式，后端再次验证分数范围和必填项。
+- 删除操作有二次确认弹窗，关联数据（如已分配实习的学生）无法直接删除。
+- 登录时可记住用户名（cookie，30 天有效期）。
+
+---
+
+## 目录结构
+
+```
+COMP1044_CW_G10/
+├── Admin/
+│   ├── admin_help_modal.php       # 帮助说明弹窗
+│   ├── dashboard.php              # Admin 主页
+│   ├── export_results.php         # CSV 导出
+│   ├── manage_internships.php     # 实习分配管理
+│   ├── manage_students.php        # 学生管理
+│   ├── manage_users.php           # 评审员账号管理
+│   └── view_all_results.php       # 全部成绩查看
+├── Assessor/
+│   ├── assessor_dashboard.php     # Assessor 主页
+│   ├── assessor_help_modal.php    # 帮助说明弹窗
+│   ├── evaluate_student.php       # 评分表单
+│   └── submit_marks.php           # 提交处理 + 个人成绩查看
+├── Includes/
+│   └── db_connect.php             # 数据库连接
+├── images/
+│   └── logo.png
+├── login.php
+├── logout.php
+├── style.css
+└── README.md
 ```
 
 ---
 
-## 🚀 Installation & Setup Guide
+## 本地运行方法
 
-To run this application locally for testing or grading, please follow these steps:
-
-### 1. Environment Preparation
-Ensure you have a local server environment installed (e.g., **XAMPP**, WAMP, or MAMP) with **PHP 7.0+** and **MySQL**.
-
-### 2. Start Services
-Launch your control panel and start both **Apache** and **MySQL** modules.
-
-### 3. Database Setup ⚠️ Important — must be done before first login
-
-> ⚠️ **Team Note**: The SQL file provided in `SQL&diagram/COMP1044_Database.sql` already contains the complete schema **and** pre-populated sample data (6 students, 3 users, 6 internships, 5 assessments covering all score ranges). You do **not** need to manually insert any records after import — just run the file once and everything will be ready for testing.
-
-1. Open phpMyAdmin at `http://localhost/phpmyadmin`.
-2. Click the **Import** tab.
-3. Choose the file located at `SQL&diagram/COMP1044_Database.sql`.
-4. Click **Go** to execute. This script will:
-   - Create the database `COMP1044_CW_DB`.
-   - Build all required tables (`Users`, `Students`, `Internships`, `Assessments`) with proper primary/foreign key constraints.
-   - Insert sample data covering different evaluation scenarios — including a pending evaluation (Charlie) and scores across all grade bands (Merit / Pass / Fail) to demonstrate color-coded badges.
-
-### 4. Deploy Application
-Copy the entire project folder (`COMP1044_CW_Gx`) into your local server's root directory (e.g., `C:\xampp\htdocs\`).
-
-### 5. Launch
-Open a web browser and navigate to:
-`http://localhost/COMP1044_CW_Gx/login.php`
+1. 安装 XAMPP（或 WAMP / MAMP），启动 Apache 和 MySQL。
+2. 打开 phpMyAdmin，点 Import，选择 `COMP1044_Database.sql` 导入。这个文件里已经包含建表语句和示例数据，导入一次就行，不需要再手动添加数据。
+3. 把整个项目文件夹放到 `htdocs/` 目录下。
+4. 浏览器访问 `http://localhost/COMP1044_CW_G10/login.php`。
 
 ---
 
-## 🔐 Sample Login Credentials
+## 测试账号
 
-The following test accounts are pre-loaded in the SQL file. **You must import the database first (Step 3 above) before you can log in.**
-
-### Admin Account
-| Username | Password |
-|----------|----------|
-| `admin` | `admin123` |
-
-### Assessor Accounts
-| Username | Password |
-|----------|----------|
-| `Dr_smith` | `smith123` |
-| `Prof_jones` | `jones123` |
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| Admin | `admin` | `admin123` |
+| Assessor | `Dr_smith` | `smith123` |
+| Assessor | `Prof_jones` | `jones123` |
 
 ---
 
-## 📊 Sample Data Overview
+## 示例数据
 
-The pre-populated data is designed to showcase all system features:
+导入后数据库里有 6 个学生，覆盖了不同评分段和状态：
 
-| Student | Programme | Assessor | Status |
-|---------|-----------|----------|--------|
-| Alice Wong (S2024001) | Computer Science | Dr_smith | ✅ Evaluated — 92.50 (Merit) |
-| Bob Chen (S2024002) | Software Engineering | Dr_smith | ✅ Evaluated — 74.00 (Merit) |
-| Charlie Davis (S2024003) | Information Technology | Dr_smith | ⏳ **Pending** |
-| Diana Lim (S2024004) | Computer Science | Prof_jones | ✅ Evaluated — 84.50 (Merit) |
-| Evan Taylor (S2024005) | Data Science | Prof_jones | ✅ Evaluated — 58.50 (Pass) |
-| Frank Wilson (S2024006) | Software Engineering | Dr_smith | ✅ Evaluated — 42.50 (Fail) |
+| 学生 | 专业 | 评审员 | 状态 |
+|------|------|--------|------|
+| Alice Wong (S2024001) | Computer Science | Dr_smith | 已评 — 92.50 |
+| Bob Chen (S2024002) | Software Engineering | Dr_smith | 已评 — 74.00 |
+| Charlie Davis (S2024003) | Information Technology | Dr_smith | **待评** |
+| Diana Lim (S2024004) | Computer Science | Prof_jones | 已评 — 84.50 |
+| Evan Taylor (S2024005) | Data Science | Prof_jones | 已评 — 58.50 |
+| Frank Wilson (S2024006) | Software Engineering | Dr_smith | 已评 — 42.50 |
 
-Logging in as `Dr_smith` will show a red "Evaluate [1]" badge in the navigation bar due to Charlie's pending evaluation — a good demonstration of the real-time workload indicator.
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | HTML5, CSS3 (custom Moodle-style design), JavaScript (vanilla) |
-| Backend | PHP 7+ (PDO for database access) |
-| Database | MySQL 5.7+ / MariaDB |
-| Server | Apache (XAMPP) |
+用 `Dr_smith` 登录时，导航栏会出现红色角标"Evaluate [1]"，因为 Charlie 还没评，方便演示实时提醒功能。
 
 ---
 
-## 👥 Team Members (Group 10)
+## 技术栈
 
-* **[Lin Yiwei]** 
-* **[Deng Changhui]** 
-* **[Cao Shiyu]** 
+| 层次 | 技术 |
+|------|------|
+| 前端 | HTML5、CSS3、原生 JavaScript |
+| 后端 | PHP 7+，PDO |
+| 数据库 | MySQL 8.0 |
+| 服务器 | Apache（XAMPP） |
+
+---
+
+## 成员
+
+- Lin Yiwei
+- Deng Changhui
+- Cao Shiyu
