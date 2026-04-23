@@ -1,59 +1,61 @@
 # Internship Assessment System — COMP1044 Group 10
 
-## 简介
+## What is this?
 
-这是我们为 COMP1044 课程作业开发的一个网页端实习成绩管理系统，用来替代过去那种用 Excel 表格手动记录、手动算分的方式。系统支持两种角色登录：Admin 负责管理学生、评审员和实习分配；Assessor（讲师/导师）负责给分和写评语，系统会自动按固定权重算出最终成绩。
+A web-based system for managing and grading student internships, built for the COMP1044 coursework. The idea is pretty straightforward — instead of tracking everything in spreadsheets and calculating weighted scores by hand, this system handles it automatically.
 
-数据库用 MySQL，前端是 HTML + CSS + JavaScript，后端是 PHP（PDO）。
+There are two roles: **Admin** (manages students, assessors, and internship assignments) and **Assessor** (submits marks and comments for assigned students). The final score is calculated automatically based on fixed weightages.
 
----
-
-## 功能说明
-
-### Admin 端
-
-- **Dashboard**：登进去先看到统计概览，包括学生总数、评审员数、已评/待评人数、全校平均分，还有个进度条。卡片可以点击跳转到对应管理页面。
-- **学生管理**：增删改查，可以按专业筛选。
-- **评审员管理**：新增/编辑/删除评审员账号，编辑时密码可选填（留空则不修改）。
-- **实习分配**：把学生分配给对应评审员，记录公司名称和备注。
-- **成绩查看**：查看所有学生的详细分数，支持搜索、表头排序，双击行可弹出详情和评语。成绩按分段显示颜色标签（70+ 绿色、50–69 蓝色、低于 50 红色）。
-- **导出 CSV**：一键把所有评估结果导出为 CSV 文件。
-
-### Assessor 端
-
-- **Dashboard**：显示自己负责的学生数、已完成/待完成数量，以及自己给出的平均分。
-- **评分页面**：从下拉搜索中选学生，输入 8 项分数（0–100 的原始分），页面实时显示加权后的总分预览。提交前会弹出确认框，提交后不可修改。
-- **结果查看**：查看自己已评学生的明细分数，支持搜索和排序。
-
-### 通用功能
-
-- 登录后根据角色自动跳转到对应页面，非授权页面会重定向回登录页。
-- 所有数据库操作用 PDO prepared statements，防止 SQL 注入。
-- 前后端都有校验：前端限制输入格式，后端再次验证分数范围和必填项。
-- 删除操作有二次确认弹窗，关联数据（如已分配实习的学生）无法直接删除。
-- 登录时可记住用户名（cookie，30 天有效期）。
+Stack: MySQL + PHP (PDO) + HTML/CSS/JavaScript.
 
 ---
 
-## 目录结构
+## Features
+
+### Admin
+
+- **Dashboard** — shows key stats at a glance: total students, assessors, how many evaluations are done vs pending, and the university-wide average. Each stat card is clickable and takes you to the relevant page.
+- **Student management** — add, edit, delete students. You can also filter the list by programme.
+- **Assessor management** — create and manage assessor accounts. When editing, the password field is optional — leave it blank to keep the current one.
+- **Internship assignment** — assign students to assessors and record the company name and any other notes.
+- **View all results** — see every student's scores in one table. Supports search, column sorting, and double-clicking a row opens a detailed breakdown with comments. Scores are colour-coded: green (70+), blue (50–69), red (below 50).
+- **Export CSV** — download all evaluation results as a CSV file.
+
+### Assessor
+
+- **Dashboard** — shows your own workload: how many students you have, how many you've evaluated, and the average score you've given.
+- **Evaluate students** — search for a student from a dropdown, enter raw scores (0–100) for each of the 8 criteria, and the page shows you the weighted total in real time. There's a confirmation popup before submitting, and once submitted the scores can't be changed.
+- **View results** — see detailed scores for all students you've evaluated, with search and sort.
+
+### General
+
+- Login redirects you to the right dashboard based on your role. Accessing the wrong pages just kicks you back to login.
+- All queries use PDO prepared statements — no SQL injection risk.
+- Validation happens on both sides: the frontend checks input formats, the backend re-validates score ranges and required fields.
+- Delete actions have a confirmation modal. Records with linked data (e.g. a student who already has an internship assigned) can't be deleted until those links are removed first.
+- "Remember username" cookie on login, expires after 30 days.
+
+---
+
+## Folder Structure
 
 ```
 COMP1044_CW_G10/
 ├── Admin/
-│   ├── admin_help_modal.php       # 帮助说明弹窗
-│   ├── dashboard.php              # Admin 主页
-│   ├── export_results.php         # CSV 导出
-│   ├── manage_internships.php     # 实习分配管理
-│   ├── manage_students.php        # 学生管理
-│   ├── manage_users.php           # 评审员账号管理
-│   └── view_all_results.php       # 全部成绩查看
+│   ├── admin_help_modal.php       # Help/rubric modal
+│   ├── dashboard.php              # Admin overview page
+│   ├── export_results.php         # CSV export endpoint
+│   ├── manage_internships.php     # Internship assignment CRUD
+│   ├── manage_students.php        # Student CRUD + programme filter
+│   ├── manage_users.php           # Assessor account CRUD
+│   └── view_all_results.php       # All results with colour-coded grades
 ├── Assessor/
-│   ├── assessor_dashboard.php     # Assessor 主页
-│   ├── assessor_help_modal.php    # 帮助说明弹窗
-│   ├── evaluate_student.php       # 评分表单
-│   └── submit_marks.php           # 提交处理 + 个人成绩查看
+│   ├── assessor_dashboard.php     # Assessor overview page
+│   ├── assessor_help_modal.php    # Help/rubric modal
+│   ├── evaluate_student.php       # Score entry form
+│   └── submit_marks.php           # Submission handler + personal results view
 ├── Includes/
-│   └── db_connect.php             # 数据库连接
+│   └── db_connect.php             # PDO database connection
 ├── images/
 │   └── logo.png
 ├── login.php
@@ -64,54 +66,54 @@ COMP1044_CW_G10/
 
 ---
 
-## 本地运行方法
+## How to Run Locally
 
-1. 安装 XAMPP（或 WAMP / MAMP），启动 Apache 和 MySQL。
-2. 打开 phpMyAdmin，点 Import，选择 `COMP1044_Database.sql` 导入。这个文件里已经包含建表语句和示例数据，导入一次就行，不需要再手动添加数据。
-3. 把整个项目文件夹放到 `htdocs/` 目录下。
-4. 浏览器访问 `http://localhost/COMP1044_CW_G10/login.php`。
+1. Install XAMPP (or WAMP / MAMP) and start both Apache and MySQL.
+2. Open phpMyAdmin, go to Import, and select `COMP1044_Database.sql`. This file already includes the schema and sample data — you only need to run it once and the database is ready to go.
+3. Copy the project folder into your `htdocs/` directory.
+4. Open a browser and go to `http://localhost/COMP1044_CW_G10/login.php`.
 
 ---
 
-## 测试账号
+## Test Accounts
 
-| 角色 | 用户名 | 密码 |
-|------|--------|------|
+| Role | Username | Password |
+|------|----------|----------|
 | Admin | `admin` | `admin123` |
 | Assessor | `Dr_smith` | `smith123` |
 | Assessor | `Prof_jones` | `jones123` |
 
 ---
 
-## 示例数据
+## Sample Data
 
-导入后数据库里有 6 个学生，覆盖了不同评分段和状态：
+The imported database comes with 6 students covering different score ranges and statuses:
 
-| 学生 | 专业 | 评审员 | 状态 |
-|------|------|--------|------|
-| Alice Wong (S2024001) | Computer Science | Dr_smith | 已评 — 92.50 |
-| Bob Chen (S2024002) | Software Engineering | Dr_smith | 已评 — 74.00 |
-| Charlie Davis (S2024003) | Information Technology | Dr_smith | **待评** |
-| Diana Lim (S2024004) | Computer Science | Prof_jones | 已评 — 84.50 |
-| Evan Taylor (S2024005) | Data Science | Prof_jones | 已评 — 58.50 |
-| Frank Wilson (S2024006) | Software Engineering | Dr_smith | 已评 — 42.50 |
+| Student | Programme | Assessor | Status |
+|---------|-----------|----------|--------|
+| Alice Wong (S2024001) | Computer Science | Dr_smith | Evaluated — 92.50 |
+| Bob Chen (S2024002) | Software Engineering | Dr_smith | Evaluated — 74.00 |
+| Charlie Davis (S2024003) | Information Technology | Dr_smith | **Pending** |
+| Diana Lim (S2024004) | Computer Science | Prof_jones | Evaluated — 84.50 |
+| Evan Taylor (S2024005) | Data Science | Prof_jones | Evaluated — 58.50 |
+| Frank Wilson (S2024006) | Software Engineering | Dr_smith | Evaluated — 42.50 |
 
-用 `Dr_smith` 登录时，导航栏会出现红色角标"Evaluate [1]"，因为 Charlie 还没评，方便演示实时提醒功能。
-
----
-
-## 技术栈
-
-| 层次 | 技术 |
-|------|------|
-| 前端 | HTML5、CSS3、原生 JavaScript |
-| 后端 | PHP 7+，PDO |
-| 数据库 | MySQL 8.0 |
-| 服务器 | Apache（XAMPP） |
+If you log in as `Dr_smith`, you'll notice a red "Evaluate [1]" badge in the nav bar — that's because Charlie hasn't been graded yet. Good for demonstrating the pending workload indicator.
 
 ---
 
-## 成员
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | HTML5, CSS3, vanilla JavaScript |
+| Backend | PHP 7+, PDO |
+| Database | MySQL 8.0 |
+| Server | Apache (XAMPP) |
+
+---
+
+## Team
 
 - Lin Yiwei
 - Deng Changhui
