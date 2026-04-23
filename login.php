@@ -4,13 +4,15 @@ session_start();
 // admin       -> admin123
 // Dr_smith    -> smith123
 // Prof_jones  -> jones123
+
 // if logged in, redirect based on role
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'Admin') {
         header("Location: Admin/dashboard.php");
         exit();
     } else if ($_SESSION['role'] === 'Assessor') {
-        header("Location: Assessor/evaluate_student.php");
+        // 修改1：已经登录的情况下，默认跳转到 assessor_dashboard
+        header("Location: Assessor/assessor_dashboard.php");
         exit();
     }
 }
@@ -45,7 +47,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($user['role'] === 'Admin') {
                 header("Location: Admin/dashboard.php");
             } else {
-                header("Location: Assessor/evaluate_student.php");
+                // 修改2：刚输入完密码登录成功后，跳转到 assessor_dashboard
+                header("Location: Assessor/assessor_dashboard.php");
             }
             exit();
         } else {
