@@ -74,10 +74,11 @@ $percent = $total_assigned > 0 ? round(($total_evaluated / $total_assigned) * 10
         .stat-hint { font-size: 11px; color: #7a327e; margin-top: 8px; opacity: 0; transition: opacity 0.2s; }
         .stat-card:hover .stat-hint { opacity: 1; }
         
-        /* 修改进度条的 CSS 布局：背景使用相对定位，文字使用绝对定位悬浮靠左 */
-        .progress-bar-bg { background-color: #e9ecef; border-radius: 10px; height: 30px; margin-top: 15px; position: relative; }
+        .progress-container { position: relative; margin-top: 45px; }
+        .progress-marker { position: absolute; bottom: 100%; transform: translateX(-50%); color: #10263b; font-weight: bold; font-size: 15px; padding-bottom: 8px; white-space: nowrap; transition: left 0.6s ease; }
+        .progress-triangle { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #10263b; }
+        .progress-bar-bg { background-color: #e9ecef; border-radius: 10px; height: 30px; position: relative; }
         .progress-bar-fill { background: linear-gradient(90deg, #10263b, #7a327e); height: 100%; border-radius: 10px; transition: width 0.6s ease; }
-        .progress-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: flex-start; padding-left: 15px; font-weight: bold; white-space: nowrap; pointer-events: none; }
         
         .admin-link { color: #10263b; text-decoration: none; font-weight: bold; }
         .admin-link:hover { color: #7a327e; text-decoration: underline; }
@@ -165,10 +166,13 @@ $percent = $total_assigned > 0 ? round(($total_evaluated / $total_assigned) * 10
             <?php 
                 $percent = $total_assigned > 0 ? round(($total_evaluated / $total_assigned) * 100) : 0; 
             ?>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: <?= $percent ?>%;"></div>
-                <div class="progress-text" style="color: <?= $percent > 50 ? '#ffffff' : '#10263b' ?>;">
+            <div class="progress-container">
+                <div class="progress-marker" style="left: <?= $percent ?>%;">
                     <?= $percent ?>% Complete
+                    <div class="progress-triangle"></div>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: <?= $percent ?>%;"></div>
                 </div>
             </div>
             <p style="color:#6c757d; font-size:13px; margin-top:10px;">You have evaluated <?= $total_evaluated ?> out of <?= $total_assigned ?> students.</p>
