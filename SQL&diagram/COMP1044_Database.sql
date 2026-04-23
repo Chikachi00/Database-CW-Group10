@@ -45,13 +45,25 @@ CREATE TABLE `Assessments` (
 --
 -- Dumping data for table `Assessments`
 --
+-- NOTE: All component scores are raw marks (0-100).
+-- total_score is calculated by the system as:
+--   task*0.10 + health*0.10 + conn*0.10 + report*0.15 + clarity*0.10 + lifelong*0.15 + proj*0.15 + time*0.15
+--
+-- Conversion reference (original weighted → raw):
+--   10% components: raw = weighted / 0.10  (e.g. 9.00 → 90.00)
+--   15% components: raw = weighted / 0.15  (e.g. 14.00 → 93.33)
 
 INSERT INTO `Assessments` (`assessment_id`, `internship_id`, `task_score`, `health_safety_score`, `connectivity_score`, `report_score`, `clarity_score`, `lifelong_score`, `project_mgmt_score`, `time_mgmt_score`, `total_score`, `qualitative_comments`) VALUES
-(1, 1, 9.00, 9.50, 9.00, 14.00, 9.00, 14.00, 14.00, 14.00, 92.50, 'Alice demonstrated outstanding technical skills and adapted perfectly to the company culture. Highly recommended.'),
-(2, 2, 7.00, 8.00, 7.50, 11.00, 7.00, 10.50, 12.00, 11.00, 74.00, 'Bob completed the tasks adequately, but needs to improve his communication skills and time management.'),
-(3, 4, 8.50, 9.00, 8.00, 13.00, 8.50, 12.00, 13.00, 12.50, 84.50, 'Diana is a fast learner and contributed well to the cloud architecture project. Good overall performance.'),
-(4, 5, 5.50, 6.00, 5.80, 6.20, 5.50, 6.00, 5.80, 6.00, 58.50, 'Evan showed basic understanding of data analytics concepts but struggled with independent problem-solving. Improvement needed in time management and project delivery.'),
-(5, 6, 4.00, 4.50, 4.00, 4.20, 4.00, 4.50, 4.20, 4.50, 42.50, 'Frank did not meet the expected standard. Frequent absence, poor engagement with assigned tasks, and weak technical foundation. Requires significant improvement.');
+-- Alice: 90*0.10 + 95*0.10 + 90*0.10 + 93.33*0.15 + 90*0.10 + 93.33*0.15 + 93.33*0.15 + 93.33*0.15 = 92.50
+(1, 1, 90.00, 95.00, 90.00, 93.33, 90.00, 93.33, 93.33, 93.33, 92.50, 'Alice demonstrated outstanding technical skills and adapted perfectly to the company culture. Highly recommended.'),
+-- Bob: 70*0.10 + 80*0.10 + 75*0.10 + 73.33*0.15 + 70*0.10 + 70*0.15 + 80*0.15 + 73.33*0.15 = 74.00
+(2, 2, 70.00, 80.00, 75.00, 73.33, 70.00, 70.00, 80.00, 73.33, 74.00, 'Bob completed the tasks adequately, but needs to improve his communication skills and time management.'),
+-- Diana: 85*0.10 + 90*0.10 + 80*0.10 + 86.67*0.15 + 85*0.10 + 80*0.15 + 86.67*0.15 + 83.33*0.15 = 84.50
+(3, 4, 85.00, 90.00, 80.00, 86.67, 85.00, 80.00, 86.67, 83.33, 84.50, 'Diana is a fast learner and contributed well to the cloud architecture project. Good overall performance.'),
+-- Evan: 55*0.10 + 60*0.10 + 58*0.10 + 60*0.15 + 55*0.10 + 60*0.15 + 58*0.15 + 60*0.15 = 58.50
+(4, 5, 55.00, 60.00, 58.00, 60.00, 55.00, 60.00, 58.00, 60.00, 58.50, 'Evan showed basic understanding of data analytics concepts but struggled with independent problem-solving. Improvement needed in time management and project delivery.'),
+-- Frank: 40*0.10 + 50*0.10 + 40*0.10 + 42.50*0.15 + 40*0.10 + 42.50*0.15 + 42.50*0.15 + 42.50*0.15 = 42.50
+(5, 6, 40.00, 50.00, 40.00, 42.50, 40.00, 42.50, 42.50, 42.50, 42.50, 'Frank did not meet the expected standard. Frequent absence, poor engagement with assigned tasks, and weak technical foundation. Requires significant improvement.');
 
 -- --------------------------------------------------------
 
