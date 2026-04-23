@@ -38,27 +38,30 @@ This project is a comprehensive Web-based Database Application designed to manag
 
 ```text
 COMP1044_CW_Gx/
- ┣ Admin/                     # Admin exclusive functional pages
- ┃  ┣ dashboard.php           # Admin overview with statistics
- ┃  ┣ manage_students.php     # Student CRUD + programme filter
- ┃  ┣ manage_internships.php  # Internship assignment CRUD
- ┃  ┣ manage_users.php        # Assessor account CRUD
- ┃  ┣ view_all_results.php    # Global results view with color-coded grades
- ┃  ┗ export_results.php      # CSV export endpoint
- ┣ Assessor/                  # Assessor exclusive functional pages
- ┃  ┣ evaluate_student.php    # Score entry form
- ┃  ┗ submit_marks.php        # Submission handler + personal results view
- ┣ Includes/                  # Backend configurations and shared logic
- ┃  ┗ db_connect.php          # PDO Database connection script
- ┣ images/                    # Logo and static assets
+ ┣ Admin/                        # Admin exclusive functional pages
+ ┃  ┣ admin_help_modal.php       # Admin help/guide modal
+ ┃  ┣ dashboard.php              # Admin overview with statistics
+ ┃  ┣ export_results.php         # CSV export endpoint
+ ┃  ┣ manage_internships.php     # Internship assignment CRUD
+ ┃  ┣ manage_students.php        # Student CRUD + programme filter
+ ┃  ┣ manage_users.php           # Assessor account CRUD
+ ┃  ┗ view_all_results.php       # Global results view with color-coded grades
+ ┣ Assessor/                     # Assessor exclusive functional pages
+ ┃  ┣ assessor_dashboard.php     # Assessor overview page
+ ┃  ┣ assessor_help_modal.php    # Assessor help/guide modal
+ ┃  ┣ evaluate_student.php       # Score entry form
+ ┃  ┗ submit_marks.php           # Submission handler + personal results view
+ ┣ Includes/                     # Backend configurations and shared logic
+ ┃  ┗ db_connect.php             # PDO Database connection script
+ ┣ images/                       # Logo and static assets
  ┃  ┗ logo.png
- ┣ SQL&diagram/               # Database deliverables
- ┃  ┣ COMP1044_Database.sql   # SQL script (DDL & DML with sample data)
- ┃  ┗ COMP1044_ERD.pdf        # Entity-Relationship Diagram (Crow's foot)
- ┣ login.php                  # System authentication gateway
- ┣ logout.php                 # Session destruction script
- ┣ style.css                  # Global stylesheet (Moodle-inspired design)
- ┗ README.md                  # Project documentation
+ ┣ SQL&diagram/                  # Database deliverables
+ ┃  ┣ COMP1044_Database.sql      # SQL script (DDL & DML with sample data)
+ ┃  ┗ COMP1044_ERD.pdf           # Entity-Relationship Diagram (Crow's foot)
+ ┣ login.php                     # System authentication gateway
+ ┣ logout.php                    # Session destruction script
+ ┣ style.css                     # Global stylesheet (Moodle-inspired design)
+ ┗ README.md                     # Project documentation
 ```
 
 ---
